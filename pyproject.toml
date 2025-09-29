@@ -1,0 +1,26 @@
+[project]
+name = "sdr-pipeline"
+version = "0.1.0"
+description = "SDR capture and analysis pipeline"
+requires-python = ">=3.10"
+
+dependencies = [
+    "kuzu>=0.4.1",
+    "numpy>=2.2.6",
+    "sigmf>=1.2.10",
+    "scipy>=1.15.3",
+    "matplotlib>=3.10.6",
+]
+
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+# Minimal package discovery - let setuptools auto-discover
+[tool.setuptools.packages.find]
+exclude = [
+    "data*",
+    "captures*", 
+    "metadata*",
+    "database*"
+]
