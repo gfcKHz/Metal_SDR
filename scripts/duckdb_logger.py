@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS captures (
 """
 
 def log_to_duckdb(capture: dict, db_path: Path) -> None:
+    # ensure the parent directory exists
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    
     conn = duckdb.connect(str(db_path))
     conn.execute(DDL)
     conn.execute("""

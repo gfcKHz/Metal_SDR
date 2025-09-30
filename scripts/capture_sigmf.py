@@ -11,8 +11,8 @@ from sigmf import SigMFFile
 def calculate_file_hash(file_path):
     """calculate SHA-256 hash of file content"""
     hasher = hashlib.sha256()
-    # ensure the path is treated as an absolute path string when opening
-    with open(file_path, 'rb') as f:
+    # explicitly convert Path to string
+    with open(str(file_path), 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hasher.update(chunk)
     return hasher.hexdigest()
@@ -29,9 +29,8 @@ def process_capture(
     
     stem = output_dir / f"capture_{datetime.now():%Y%m%d_%H%M%S}_{int(center_freq/1e6)}Mhz"
 
-    # 1. build metadata
+    # 1. build metadata - do not pass data_file to constructor
     sig = SigMFFile(
-        data_file=f"{stem.name}.sigmf-data",
         global_info={
             "core:datatype": "cf32_le",
             "core:sample_rate": sample_rate,
@@ -41,19 +40,27 @@ def process_capture(
             "core:license": "CC0",
         },
     )
-    sig.add_capture(0, metadata={"core:frequency": center_freq, "core:datetime": datetime.now().isoformat() + "Z"})
+    sig.add_capture(0, metadata={
+        "core:frequency": center_freq,
+        "core:datetime": datetime.now().isoformat() + "Z"
+    })
 
-    # 2. write data file
-    sig.tofile(str(stem), data_array=iq_data)   # stem -> adds .sigmf-data
-    
-    # 3. final paths
+    # 2. define final paths first 
     data_path = stem.with_suffix(".sigmf-data")
     meta_path = stem.with_suffix(".sigmf-meta")
+
+    # 3. write IQ data directly to file
+    iq_data.tofile(str(data_path))
     
-    # 4. hash *after* disk write
-    data_hash = _sha256(data_path)
-    sig.global_info["core:sha256"] = data_hash
-    sig.write_to_file(str(meta_path))           # overwrite meta with hash
+    # 4. calculate hash *after* disk write
+    data_hash = calculate_file_hash(data_path)
+
+    # 5. update metadata with hash and write meta file
+    sig.set_global_field("core:sha256", data_hash)
+
+    # 6. link the data file and write meta file
+    sig.set_data_file(str(data_path))
+    sig.tofile(str(meta_path))
     
     print(f"[SigMF]  {data_path.name}  ({data_path.stat().st_size/1e6:.1f} MB)")
     return {

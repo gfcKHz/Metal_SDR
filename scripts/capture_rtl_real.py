@@ -42,7 +42,7 @@ def capture_rtl_sdr(
         # [🌀]: time the real capture for throughput and hang detection  
         t0 = time.time()
         result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=duration + 10
+            cmd, capture_output=False, timeout=duration + 10
         )
         capture_time = time.time() - t0
          
@@ -50,11 +50,25 @@ def capture_rtl_sdr(
             print(f"Capture failed: {result.stderr}")
             return None, None
         
-        # [🌀]: we de-interleave (un-shuffle) with stride slicing. this is the same step gnu radio's
+        # verify the temp file was created and has data
+        temp_file = Path(temp_path)
+        if not temp_file.exists():
+            print(f"ERROR: Temp file not created at {temp_path}")
+            return None, None
+    
+        file_size = temp_file.stat().st_size
+        if file_size == 0:
+            print(f"ERROR: Temp file is empty")
+            return None, None
+        
+        print(f"Temp file created: {file_size:,} bytes")
+        
+        # we de-interleave (un-shuffle) with stride slicing. this is the same step gnu radio's
         # interleaved_char_to_complex block performs internally
         raw = np.fromfile(temp_path, dtype=np.uint8)
-        iq_f = (raw.astype(np.float32) - 127.5) / 127.5
-        iq = iq_f[0::2] + 1j * iq_f[1::2]
+
+        iq_float = (raw.astype(np.float32) - 127.5) / 127.5
+        iq = iq_float[0::2] + 1j * iq_float[1::2]
         
         print(f"Converted {len(iq):,} complex samples in {capture_time:.2f}s")
 
@@ -76,11 +90,16 @@ def capture_rtl_sdr(
         return None, None
     except Exception as e:
         print(f"Capture error: {e}")
+        import traceback
+        traceback.print_exc()
         return None, None
     finally:
-        Path(temp_path).unlink(missing_ok=True)
+        try:
+            Path(temp_path).unlink(missing_ok=True)
+        except Exception as e:
+            print(f"Warning: Could not delete temp file: {e}")
 
 if __name__ == "__main__":
     data, meta = capture_rtl_sdr(duration=3, center_freq=100e6, sample_rate=2.4e6)
     if data:
-        print("Success → data:", data.name, "meta:", meta.name)
+        print("Success -> data:", data.name, "meta:", meta.name)
