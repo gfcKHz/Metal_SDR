@@ -64,7 +64,7 @@ def capture_rtl_sdr(
         
         print(f"Temp file created: {file_size:,} bytes")
         
-        # [🌀]: we de-interleave (un-shuffle) with stride slicing. this is the same step gnu radio's
+        # we de-interleave (un-shuffle) with stride slicing. this is the same step gnu radio's
         # interleaved_char_to_complex block performs internally
         raw = np.fromfile(temp_path, dtype=np.uint8)
 
