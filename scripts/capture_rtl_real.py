@@ -5,18 +5,19 @@ from pathlib import Path
 import time
 import tempfile
 
-from config import CAPTURES_DIR, DB_PATH 
-from capture_sigmf import process_capture 
-from duckdb_logger import log_to_duckdb
+from config import CAPTURES_DIR
+from capture_sigmf import process_capture
+from sqlite_logger import log_to_sqlite
 
 def capture_rtl_sdr(
-    duration: int = 5, 
-    center_freq: int = 142.0e6, 
-    sample_rate: int = 2.4e6, 
+    duration: int = 5,
+    center_freq: int = 142.0e6,
+    sample_rate: int = 2.4e6,
     gain: int = 20,
+    notes: str = "",
 ):
     """
-    Capture IQ via rtl_sdr.exe, convert to SigMF, log to DuckDB 
+    Capture IQ via rtl_sdr.exe, convert to SigMF, log to SQLite
     """
     print(f"Capturing {duration}s at {center_freq/1e6:.1f} MHz")
     
@@ -80,8 +81,13 @@ def capture_rtl_sdr(
             output_dir=CAPTURES_DIR
         )
 
-        # DuckDB manifest
-        log_to_duckdb(capture_info, DB_PATH)
+        # Add capture parameters for SQLite logging
+        capture_info["gain_db"] = gain
+        capture_info["duration_sec"] = duration
+        capture_info["notes"] = notes
+
+        # SQLite manifest
+        capture_id = log_to_sqlite(capture_info)
 
         return capture_info["data_path"], capture_info["meta_path"]
     

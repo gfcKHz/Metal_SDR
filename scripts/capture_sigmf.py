@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import hashlib
+import blake3 
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -9,8 +9,8 @@ import sigmf
 from sigmf import SigMFFile 
 
 def calculate_file_hash(file_path):
-    """calculate SHA-256 hash of file content"""
-    hasher = hashlib.sha256()
+    """calculate BLAKE3 hash of file content"""
+    hasher = blake3.blake3()
     # explicitly convert Path to string
     with open(str(file_path), 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -24,7 +24,7 @@ def process_capture(
     sample_rate: float, 
     output_dir: Path,
 ) -> dict:
-    """Write IQ as SigMF pair, return metadata dict for DuckDB"""
+    """Write IQ as SigMF pair, return metadata dict for SQLite"""
     output_dir.mkdir(parents=True, exist_ok=True)
     
     stem = output_dir / f"capture_{datetime.now():%Y%m%d_%H%M%S}_{int(center_freq/1e6)}Mhz"
@@ -56,7 +56,7 @@ def process_capture(
     data_hash = calculate_file_hash(data_path)
 
     # 5. update metadata with hash and write meta file
-    sig.set_global_field("core:sha256", data_hash)
+    sig.set_global_field("core:blake3", data_hash)
 
     # 6. link the data file and write meta file
     sig.set_data_file(str(data_path))
