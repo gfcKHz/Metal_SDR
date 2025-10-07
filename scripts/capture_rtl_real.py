@@ -4,6 +4,7 @@ import numpy as np
 from pathlib import Path
 import time
 import tempfile
+import platform
 
 from config import CAPTURES_DIR
 from capture_sigmf import process_capture
@@ -29,11 +30,12 @@ def capture_rtl_sdr(
         temp_path = tmp.name
     
     try:
-        # build rtl_sdr command
+        # build rtl_sdr command (cross-platform)
+        rtl_sdr_binary = "rtl_sdr.exe" if platform.system() == "Windows" else "rtl_sdr"
         cmd = [
-            "rtl_sdr.exe",
+            rtl_sdr_binary,
             "-f", str(int(center_freq)),
-            "-s", str(int(sample_rate)), 
+            "-s", str(int(sample_rate)),
             "-n", str(samples_needed),
             "-g", str(gain),
             temp_path
