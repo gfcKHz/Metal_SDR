@@ -13,15 +13,133 @@ RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
 ## Architecture
 
 ```
-RTL-SDR Hardware
-      ↓
-rtl_sdr.exe (capture IQ samples)
-      ↓
-IQ Processing (uint8 → complex float32)
-      ↓
-SigMF Format (.sigmf-data + .sigmf-meta)
-      ↓
-SQLite Manifest (capture_manifest.db)
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            METAL-SDR PIPELINE                           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────────┐
+    │  RTL-SDR R828D   │  ← Hardware (Production: Hades Canyon NUC)
+    │   915 MHz ISM    │    Development: M2 MacBook + portable SDR
+    └────────┬─────────┘    Future: Ettus B210 (Jan 2025)
+             │
+             │ USB 2.0
+             ▼
+    ┌──────────────────────────────────────────────────────────────────────┐
+    │                       rtl_sdr.exe CAPTURE                            │
+    │  ┌────────────────────────────────────────────────────────────────┐  │
+    │  │  Command: rtl_sdr -f <freq> -s 2.4e6 -n <samples> output.bin   │  │
+    │  │  Output: Raw IQ samples (uint8, interleaved I/Q)               │  │
+    │  └────────────────────────────────────────────────────────────────┘  │
+    └────────┬─────────────────────────────────────────────────────────────┘
+             │
+             │ .bin file (uint8 I/Q)
+             ▼
+    ┌──────────────────────────────────────────────────────────────────────┐
+    │                      IQ PROCESSING LAYER                             │
+    │  ┌────────────────────────────────────────────────────────────────┐  │
+    │  │  1. Convert uint8 → complex float32                            │  │
+    │  │     scale = (iq_u8 - 127.5) / 127.5                            │  │
+    │  │                                                                │  │
+    │  │  2. DC offset removal (optional)                               │  │
+    │  │     iq_centered = iq - mean(iq)                                │  │
+    │  │                                                                │  │
+    │  │  3. IQ imbalance correction (future)                           │  │
+    │  │     α = amplitude_factor, θ = phase_offset                     │  │
+    │  └────────────────────────────────────────────────────────────────┘  │
+    └────────┬─────────────────────────────────────────────────────────────┘
+             │
+             │ complex64 array
+             ▼
+    ┌──────────────────────────────────────────────────────────────────────┐
+    │                        SIGMF FORMATTER                               │
+    │  ┌────────────────────────────────────────────────────────────────┐  │
+    │  │  .sigmf-data:  Binary IQ samples (complex64, little-endian)    │  │
+    │  │  .sigmf-meta:  JSON metadata                                   │  │
+    │  │    {                                                           │  │
+    │  │      "global": {                                               │  │
+    │  │        "core:datatype": "cf32_le",                             │  │
+    │  │        "core:sample_rate": 2400000,                            │  │
+    │  │        "core:version": "1.0.0",                                │  │
+    │  │        "core:sha512": "<hash>"                                 │  │
+    │  │      },                                                        │  │
+    │  │      "captures": [{                                            │  │
+    │  │        "core:frequency": 915000000,                            │  │
+    │  │        "core:datetime": "2025-01-15T14:30:00Z"                 │  │
+    │  │      }],                                                       │  │
+    │  │      "annotations": []                                         │  │
+    │  │    }                                                           │  │
+    │  └────────────────────────────────────────────────────────────────┘  │
+    └────────┬─────────────────────────────────────────────────────────────┘
+             │
+             │ .sigmf-data + .sigmf-meta
+             ▼
+    ┌──────────────────────────────────────────────────────────────────────┐
+    │                    SQLITE MANIFEST DATABASE                          │
+    │  ┌────────────────────────────────────────────────────────────────┐  │
+    │  │  TABLE: captures                                               │  │
+    │  │  ┌──────────┬─────────────┬──────────────┬──────────────────┐  │  │
+    │  │  │ id (PK)  │ file_path   │ center_freq  │ sample_rate      │  │  │
+    │  │  ├──────────┼─────────────┼──────────────┼──────────────────┤  │  │
+    │  │  │ 1        │ cap001.sigmf│ 915000000    │ 2400000          │  │  │
+    │  │  │ 2        │ cap002.sigmf│ 105900000    │ 2400000          │  │  │
+    │  │  └──────────┴─────────────┴──────────────┴──────────────────┘  │  │
+    │  │                                                                │  │
+    │  │  TABLE: fingerprints (NEXT PHASE)                              │  │
+    │  │  ┌──────────┬──────────────┬───────┬────────────────────────┐  │  │
+    │  │  │ cap_id   │ peak_freq_hz │ cnr_db│ bandwidth_3db_hz       │  │  │
+    │  │  ├──────────┼──────────────┼───────┼────────────────────────┤  │  │
+    │  │  │ 1        │ 915234567    │ 28.3  │ 195000                 │  │  │
+    │  │  └──────────┴──────────────┴───────┴────────────────────────┘  │  │
+    │  │                                                                │  │
+    │  │  Integrity: BLAKE3 hashes verify .sigmf-data hasn't changed    │  │
+    │  └────────────────────────────────────────────────────────────────┘  │
+    └────────┬─────────────────────────────────────────────────────────────┘
+             │
+             │ Query captures
+             ▼
+    ┌──────────────────────────────────────────────────────────────────────┐
+    │                    FEATURE EXTRACTION (extract_fingerprints.py)      │
+    │  ┌────────────────────────────────────────────────────────────────┐  │
+    │  │  FOR EACH .sigmf-data file:                                    │  │
+    │  │                                                                │  │
+    │  │  1. Load IQ samples                                            │  │
+    │  │  2. Compute Welch PSD (4096-pt FFT, 50% overlap, Hann window)  │  │
+    │  │  3. Extract Tier-1 Features:                                   │  │
+    │  │     ┌──────────────────────────────────────────────────────┐   │  │
+    │  │     │ • Peak Frequency (parabolic interpolation, ±50 Hz)   │   │  │
+    │  │     │ • CNR via MPA noise floor (quietest 5% of bins)      │   │  │
+    │  │     │ • 3dB Bandwidth (interpolate -3dB points)            │   │  │
+    │  │     │ • Adjacent Rejection (power ratio @ ±200 kHz)        │   │  │
+    │  │     │ • Spectral Rolloff (dB/100kHz, asymmetry)            │   │  │
+    │  │     └──────────────────────────────────────────────────────┘   │  │
+    │  │  4. Validate against expected station parameters               │  │
+    │  │  5. INSERT INTO fingerprints table                             │  │
+    │  └────────────────────────────────────────────────────────────────┘  │
+    └────────┬─────────────────────────────────────────────────────────────┘
+             │
+             │ Validated features
+             ▼
+    ┌──────────────────────────────────────────────────────────────────────┐
+    │                      ML TRAINING PIPELINE (FUTURE)                   │
+    │  ┌────────────────────────────────────────────────────────────────┐  │
+    │  │  • Graph Neural Network (GNN) for spectral topology            │  │
+    │  │  • Transformer for temporal patterns                           │  │
+    │  │  • Few-shot learning (300-400 captures, small dataset)         │  │
+    │  │  • Metal acceleration on Apple Silicon (M2 MacBook)            │  │
+    │  └────────────────────────────────────────────────────────────────┘  │
+    └──────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          DATA FLOW SUMMARY                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Raw RF → IQ Processing → SigMF → SQLite → Feature Extraction → ML      │
+│   (uint8)   (complex64)    (files)  (manifest)  (fingerprints)  (GNN)   │
+│                                                                         │
+│  Integrity: BLAKE3 hashes at each stage, SQLite ACID guarantees         │
+│  Provenance: Timestamps, hardware ID, Git commit SHA in metadata        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Components
