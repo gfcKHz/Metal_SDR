@@ -1,4 +1,4 @@
-# metal_sdr
+# Metal_SDR
 
 RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
 
@@ -6,7 +6,7 @@ RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
 
 **Purpose**: Capture IQ samples from RTL-SDR hardware, store in SigMF format, and maintain a SQLite manifest for tracking captures over time.
 
-**Hardware**: RTL-SDR (R820T/R828D tuner)
+**Hardware**: RTL-SDR (R828D v4)
 
 **Target Signals**: FM broadcast stations (87.5-108 MHz)
 
@@ -164,37 +164,12 @@ Total duration: 0.01 hours
 
 **Manual Labeling**: Station identification and signal classification must be done manually after capture.
 
-## System Requirements
-
-### Hardware
-- RTL-SDR dongle (R820T, R820T2, or R828D tuner)
-- USB 2.0 or higher
-
-### Software Dependencies
-```
-numpy
-scipy
-sigmf
-blake3
-```
-
-### External Tools
-- `rtl_sdr.exe` (Windows) or `rtl_sdr` (Linux) in PATH
-
 ## Data Storage
 
 - **Sample rate**: 2.4 MHz (2.4 million complex samples/second)
 - **Data rate**: 19.2 MB/sec (2 × 4 bytes per complex sample)
 - **3-second capture**: ~57.6 MB per file
 - **Typical usage**: 300-400 captures = 17-23 GB
-
-## Future Enhancements
-
-See project planning documents for upcoming multi-feature FM fingerprinting system to address peak frequency instability and enable automated station validation.
-
-## License
-
-CC0 (Public Domain)
 
 ## Author
 
