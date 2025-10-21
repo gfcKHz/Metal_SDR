@@ -34,19 +34,18 @@ RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
              │
              │ .bin file (uint8 I/Q)
              ▼
-    ┌──────────────────────────────────────────────────────────────────────┐
-    │                      IQ PROCESSING LAYER                             │
-    │  ┌────────────────────────────────────────────────────────────────┐  │
-    │  │  1. Convert uint8 → complex float32                            │  │
-    │  │     scale = (iq_u8 - 127.5) / 127.5                            │  │
-    │  │                                                                │  │
-    │  │  2. DC offset removal (optional)                               │  │
-    │  │     iq_centered = iq - mean(iq)                                │  │
-    │  │                                                                │  │
-    │  │  3. IQ imbalance correction (future)                           │  │
-    │  │     α = amplitude_factor, θ = phase_offset                     │  │
-    │  └────────────────────────────────────────────────────────────────┘  │
-    └────────┬─────────────────────────────────────────────────────────────┘
+    ┌─────────────────────────────────────────────────────────────────────────────┐ │                      IQ PROCESSING LAYER                                    │
+    │  ┌───────────────────────────────────────────────────────────────────────┐  │
+    │  │  1. Convert uint8 → complex float32 (line 74, capture_rtl_real.py)    │  │                      │  │                                                                       │  │
+    │  │     scale = (iq_u8 - 127.5) / 127.5                                   │  │
+    │  │                                                                       │  │
+    │  │  2. DC offset removal (optional)                                      │  │
+    │  │     iq_centered = iq - mean(iq)                                       │  │
+    │  │                                                                       │  │
+    │  │  3. IQ imbalance correction (future)                                  │  │
+    │  │     α = amplitude_factor, θ = phase_offset                            │  │
+    │  └───────────────────────────────────────────────────────────────────────┘  │
+    └────────┬────────────────────────────────────────────────────────────────────┘
              │
              │ complex64 array
              ▼
