@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import subprocess
 import numpy as np
 from pathlib import Path
@@ -12,7 +13,7 @@ from sqlite_logger import log_to_sqlite
 
 def capture_rtl_sdr(
     duration: int = 5,
-    center_freq: int = 142.0e6,
+    center_freq: int = 100.0e6,
     sample_rate: int = 2.4e6,
     gain: int = 20,
     notes: str = "",
@@ -42,13 +43,13 @@ def capture_rtl_sdr(
         ]
         print("Cmd:", " ".join(cmd))
         
-        # time the real capture for throughput and hang detection  
+        # time the real capture for throughput and hang detection
         t0 = time.time()
         result = subprocess.run(
-            cmd, capture_output=False, timeout=duration + 10
+            cmd, capture_output=True, text=True, timeout=duration + 10
         )
         capture_time = time.time() - t0
-         
+
         if result.returncode != 0:
             print(f"Capture failed: {result.stderr}")
             return None, None
@@ -108,6 +109,21 @@ def capture_rtl_sdr(
             print(f"Warning: Could not delete temp file: {e}")
 
 if __name__ == "__main__":
-    data, meta = capture_rtl_sdr(duration=3, center_freq=100e6, sample_rate=2.4e6)
+    parser = argparse.ArgumentParser(description="Capture IQ samples from RTL-SDR")
+    parser.add_argument("--freq", type=float, default=100e6, help="Center frequency in Hz (default: 100 MHz)")
+    parser.add_argument("--duration", type=int, default=3, help="Capture duration in seconds (default: 3)")
+    parser.add_argument("--sample-rate", type=float, default=2.4e6, help="Sample rate in Hz (default: 2.4 MHz)")
+    parser.add_argument("--gain", type=int, default=20, help="Tuner gain in dB (default: 20)")
+    parser.add_argument("--notes", type=str, default="", help="Notes for this capture")
+
+    args = parser.parse_args()
+    
+    data, meta = capture_rtl_sdr(
+        duration=args.duration,
+        center_freq=args.freq,
+        sample_rate=args.sample_rate,
+        gain=args.gain,
+        notes=args.notes
+    )
     if data:
-        print("Success -> data:", data.name, "meta:", meta.name)
+        print("Success -> data: ", data.name, "meta:", meta.name)

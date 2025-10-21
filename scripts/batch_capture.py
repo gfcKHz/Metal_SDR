@@ -6,7 +6,7 @@ def batch_capture(
     num_captures: int = 10,
     interval_sec: int = 300,  # 5 minutes
     center_freq: float = 105.9e6,
-    sample_rate: float = 1.2e6,
+    sample_rate: float = 2.4e6,
     duration: int = 3
 ):
     """
@@ -23,7 +23,7 @@ def batch_capture(
     print(f"Frequency: {center_freq/1e6:.1f} MHz, Rate: {sample_rate/1e6:.1f} Msps")
 
     for i in range(num_captures):
-        print(f"\n=== Capture {i+1}/{num_captures} ===")
+        print(f"\nCapture {i+1}/{num_captures} ===")
 
         data, meta = capture_rtl_sdr(
             duration=duration,
@@ -33,31 +33,33 @@ def batch_capture(
         )
 
         if data:
-            print(f"✓ Capture {i+1} complete: {data.name}")
+            print(f"Capture {i+1} complete: {data.name}")
         else:
-            print(f"✗ Capture {i+1} failed")
+            print(f"Capture {i+1} failed")
 
         # Wait before next capture (except after last one)
         if i < num_captures - 1:
             print(f"Waiting {interval_sec}s until next capture...")
             time.sleep(interval_sec)
 
-    print(f"\n✓ Batch complete: {num_captures} captures done")
+    print(f"\nBatch complete: {num_captures} captures done")
 
 if __name__ == "__main__":
-    import sys
+      import argparse
 
-    # CLI: python batch_capture.py [num_captures] [interval_sec] [freq_mhz] [rate_msps] [duration]
-    num = int(sys.argv[1]) if len(sys.argv) > 1 else 10
-    interval = int(sys.argv[2]) if len(sys.argv) > 2 else 300
-    freq = float(sys.argv[3]) if len(sys.argv) > 3 else 105.9
-    rate = float(sys.argv[4]) if len(sys.argv) > 4 else 1.2
-    dur = int(sys.argv[5]) if len(sys.argv) > 5 else 3
+      parser = argparse.ArgumentParser(description="Batch capture IQ samples from RTL-SDR")
+      parser.add_argument("--num-captures", type=int, default=10, help="Number of captures (default: 10)")
+      parser.add_argument("--interval", type=int, default=300, help="Interval between captures in seconds (default: 300)")
+      parser.add_argument("--freq", type=float, default=105.9e6, help="Center frequency in Hz (default: 105.9 MHz)")
+      parser.add_argument("--sample-rate", type=float, default=2.4e6, help="Sample rate in Hz (default: 2.4 MHz)")
+      parser.add_argument("--duration", type=int, default=3, help="Capture duration in seconds (default: 3)")
 
-    batch_capture(
-        num_captures=num,
-        interval_sec=interval,
-        center_freq=freq * 1e6,
-        sample_rate=rate * 1e6,
-        duration=dur
-    )
+      args = parser.parse_args()
+
+      batch_capture(
+          num_captures=args.num_captures,
+          interval_sec=args.interval,
+          center_freq=args.freq,
+          sample_rate=args.sample_rate,
+          duration=args.duration
+      )
