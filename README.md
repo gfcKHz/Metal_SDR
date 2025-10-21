@@ -34,9 +34,10 @@ RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
              │
              │ .bin file (uint8 I/Q)
              ▼
-    ┌─────────────────────────────────────────────────────────────────────────────┐ │                      IQ PROCESSING LAYER                                    │
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                      IQ PROCESSING LAYER                                    │
     │  ┌───────────────────────────────────────────────────────────────────────┐  │
-    │  │  1. Convert uint8 → complex float32 (line 74, capture_rtl_real.py)    │  │                      │  │                                                                       │  │
+    │  │  1. Convert uint8 → complex float32 (line 74, capture_rtl_real.py)    │  │                                                                 │  │                                                                       │  │
     │  │     scale = (iq_u8 - 127.5) / 127.5                                   │  │
     │  │                                                                       │  │
     │  │  2. DC offset removal (optional)                                      │  │
@@ -168,7 +169,9 @@ RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
 **`sqlite_logger.py`** - Database manifest
 - Initializes SQLite database schema
 - Logs capture metadata: timestamp, frequency, sample rate, gain, duration, file path, hash. 
+
   - Naively, I thought these hardware settings were the actual representation of the signal I was trying to capture but these are merely intentions (what you asked the SDR to do), this doesn't tell you what station you actually captured, if the signal is even present, or whether you're on-frequency or drifted
+  
 - Supports optional labeling (signal type, measured frequency)
 - Database location: `data/captures/capture_manifest.db`
 
