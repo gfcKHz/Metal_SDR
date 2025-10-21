@@ -170,7 +170,3 @@ Total duration: 0.01 hours
 - **Data rate**: 19.2 MB/sec (2 × 4 bytes per complex sample)
 - **3-second capture**: ~57.6 MB per file
 - **Typical usage**: 300-400 captures = 17-23 GB
-
-## Author
-
-sp7der
