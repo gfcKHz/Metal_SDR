@@ -161,14 +161,15 @@ RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
 ### Data Pipeline
 
 **`capture_sigmf.py`** - SigMF file handling
-- Converts IQ samples to SigMF format (compliant with [SigMF specification](https://github.com/gnuradio/SigMF))
+- Converts IQ samples to SigMF format (compliant with [SigMF specification](https://sigmf.org/index.html))
 - Generates metadata JSON with capture parameters
 - Computes BLAKE3 hash for data integrity
 - File naming: `capture_YYYYMMDD_HHMMSS_<freq>Mhz.sigmf-{data,meta}`
 
 **`sqlite_logger.py`** - Database manifest
 - Initializes SQLite database schema
-- Logs capture metadata: timestamp, frequency, sample rate, gain, duration, file path, hash
+- Logs capture metadata: timestamp, frequency, sample rate, gain, duration, file path, hash. 
+  - Naively, I thought these hardware settings were the actual representation of the signal I was trying to capture but these are merely intentions (what you asked the SDR to do), this doesn't tell you what station you actually captured, if the signal is even present, or whether you're on-frequency or drifted
 - Supports optional labeling (signal type, measured frequency)
 - Database location: `data/captures/capture_manifest.db`
 
