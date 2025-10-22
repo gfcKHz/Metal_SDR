@@ -304,7 +304,7 @@ Total duration: 0.01 hours
 **References**:
 - [A Comprehensive Survey on Radio Frequency (RF) Fingerprinting](https://arxiv.org/abs/2201.00680)
 - [Quadratic Interpolation of Spectral Peaks](https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html)
-- [Welch's Method](https://ccrma.stanford.edu/~jos/sasp/Welch_s_Method.html)
+- [Welch's Method (Stanford)](https://ccrma.stanford.edu/~jos/sasp/Welch_s_Method.html)
 - [Improving FFT Frequency Measurement Resolution by Parabolic and Gaussian Interpolation](https://mgasior.web.cern.ch/pap/FFT_resol_note.pdf)
 - [Stanford EE179](https://web.stanford.edu/class/ee179/labs/Lab5.html)
 - [Automatic noise level estimation and occupied bandwidth detection](https://dsp.stackexchange.com/questions/98190/automatic-noise-level-estimation-and-occupied-bandwidth-detection)

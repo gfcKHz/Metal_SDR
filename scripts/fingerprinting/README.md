@@ -240,7 +240,7 @@ PSD spans 40+ dB. Linear fit would be dominated by peak bin. Log space treats bi
 
 ```python
 # WRONG: Different bandwidths
-carrier_power = sum(psd[±50kHz])     # 100 kHz window
+carrier_power = sum(psd[±50kHz])      # 100 kHz window
 noise_density = mean(psd[quiet_bins]) # per-Hz
 cnr = carrier_power / noise_density   # Mixed units!
 
@@ -286,7 +286,7 @@ cnr = 10 * log10(carrier_power / noise_power)       # Valid ratio
 - **Instantaneous frequency**: Phase derivative for FM deviation histogram
 
 ## References
-- [Welch's Method](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=1161901)
+- [Welch's Method (OG)](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=1161901)
 - [Parabolic Interpolation](https://ccrma.stanford.edu/STANM/stanms/stanm43/stanm43.pdf)
 - [Minimum Statistics](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=928915)
 - [Spectrum Sensing for Cognitive Radio](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8125907)
