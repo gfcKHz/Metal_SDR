@@ -264,20 +264,10 @@ Total duration: 0.01 hours
 }
 ```
 
-## Current Limitations
-
-**No Signal Analysis**: System currently only captures and stores data. No feature extraction or signal characterization is performed.
-
-**No Validation**: Captures are stored regardless of signal quality or whether the intended station was actually captured.
-
-**Peak Frequency Instability**: Preliminary analysis shows ±0.5 MHz jitter when measuring peak frequency via FFT, making it difficult to confirm station identity across multiple captures.
-
-**Manual Labeling**: Station identification and signal classification must be done manually after capture.
-
 ## Measurement Error History
 
 
-### Error #1: Wide-Bandwidth Source Ambiguity
+### Wide-Bandwidth Source Ambiguity
 
 **The Problem**: Initial captures used 2.4 MHz bandwidth centered at varying frequencies (100-142 MHz), creating a capture window that spanned multiple FM stations simultaneously. "Find the loudest peak" would identify different stations as they varied in power throughout the day.
 
@@ -288,7 +278,7 @@ Total duration: 0.01 hours
 **The Fix**: Switched to narrow targeting with validation captures. Wide-bandwidth "find anything" approaches introduce source ambiguity. Target specific frequencies, validate systematically.
 
 
-### Error #2: Single-Feature Validation Fallacy
+### Single-Feature Validation Fallacy
 
 **The Problem**: After fixing source ambiguity with narrow targeting, captures still showed ±0.5 MHz peak frequency instability across time-series captures of the same station. Relying solely on peak frequency detection via FFT bin maximum was insufficient to validate station identity.
 
@@ -322,6 +312,19 @@ Total duration: 0.01 hours
 8. [Frequency Modulation (FM) Tutorial](https://wwwqa.silabs.com/documents/public/white-papers/FMTutorial.pdf)
 9. [Spectral leakage and windowing](https://brianmcfee.net/dstbook-site/content/ch06-dft-properties/Leakage.html)
 10. [FFT Spectral Leakage and Windowing](http://saadahmad.ca/fft-spectral-leakage-and-windowing/)
+
+
+## Current Limitations
+
+**Limited to FM Broadcast**: Currently fingerprinting features are optimized for FM broadcast signals (180-220 kHz bandwidth). Other modulation types (AM, digital, etc.) would require different feature extractors.
+
+**Windows-Centric Paths**: Configuration hardcoded for Windows paths. Cross-platform deployment requires manual config changes.
+
+**No Real-Time Validation**: Multi-feature fingerprinting currently runs as post-processing. Captures are stored first, then validated in batch. Future work could integrate validation into the capture loop
+
+**Tier 2 Features Not Implemented**: Stereo pilot tone (19 kHz) and RDS subcarrier (57 kHz) detection would require FM demodulation.
+
+**Manual Station Configuration**: Expected station frequencies and characteristics must ber manually specified. No automatic station discovery or frequency scanning.
 
 
 ## Data Storage
