@@ -17,7 +17,10 @@ CREATE TABLE IF NOT EXISTS captures (
     file_path TEXT NOT NULL,
     file_size_bytes INTEGER NOT NULL,
     data_hash TEXT NOT NULL,
-    notes TEXT
+    notes TEXT,
+    validated INTEGER DEFAULT 0,
+    validation_confidence REAL,
+    validation_score INTEGER
 );
 """
 
@@ -32,6 +35,23 @@ CREATE TABLE IF NOT EXISTS labels (
 );
 """
 
+DDL_FINGERPRINTS = """
+CREATE TABLE IF NOT EXISTS fingerprints (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    capture_id INTEGER NOT NULL,
+    peak_freq_hz REAL NOT NULL,
+    freq_error_hz REAL,
+    cnr_db REAL NOT NULL,
+    bandwidth_3db_hz REAL NOT NULL,
+    adjacent_rejection_db REAL NOT NULL,
+    rolloff_left_slope REAL,
+    rolloff_right_slope REAL,
+    rolloff_asymmetry REAL,
+    processing_time_sec REAL,
+    FOREIGN KEY(capture_id) REFERENCES captures(id) ON DELETE CASCADE
+);
+"""
+
 def init_db():
     """Initialize SQLite database with schema"""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -39,6 +59,7 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     conn.execute(DDL_CAPTURES)
     conn.execute(DDL_LABELS)
+    conn.execute(DDL_FINGERPRINTS)
     conn.commit()
     conn.close()
     print(f"[DB] Initialized SQLite at {DB_PATH}")

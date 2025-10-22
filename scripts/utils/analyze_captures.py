@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import sqlite3
-from sqlite_logger import DB_PATH
+from database.sqlite_logger import DB_PATH
 
 def main():
     conn = sqlite3.connect(DB_PATH)

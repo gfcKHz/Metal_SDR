@@ -7,9 +7,13 @@ import time
 import tempfile
 import platform
 
-from config import CAPTURES_DIR
-from capture_sigmf import process_capture
-from sqlite_logger import log_to_sqlite
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utils.config import CAPTURES_DIR
+from capture.capture_sigmf import process_capture
+from database.sqlite_logger import log_to_sqlite
 
 def capture_rtl_sdr(
     duration: int = 5,

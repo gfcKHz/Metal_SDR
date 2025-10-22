@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import time
-from capture_rtl_real import capture_rtl_sdr
+from capture.capture_rtl_real import capture_rtl_sdr
 
 def batch_capture(
     num_captures: int = 10,

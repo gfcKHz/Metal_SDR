@@ -37,7 +37,7 @@ RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
     ┌─────────────────────────────────────────────────────────────────────────────┐
     │                      IQ PROCESSING LAYER                                    │
     │  ┌───────────────────────────────────────────────────────────────────────┐  │
-    │  │  1. Convert uint8 → complex float32 (line 74, capture_rtl_real.py)    │  │                      │  │                                                                       │  │
+    │  │  1. Convert uint8 → complex float32 (line 74, capture_rtl_real.py)    │  │
     │  │     scale = (iq_u8 - 127.5) / 127.5                                   │  │
     │  │                                                                       │  │
     │  │  2. DC offset removal (optional)                                      │  │
