@@ -286,7 +286,6 @@ cnr = 10 * log10(carrier_power / noise_power)       # Valid ratio
 - **Instantaneous frequency**: Phase derivative for FM deviation histogram
 
 ## References
-
 - [Welch's Method](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=1161901)
 - [Parabolic Interpolation](https://ccrma.stanford.edu/STANM/stanms/stanm43/stanm43.pdf)
 - [Minimum Statistics](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=928915)
