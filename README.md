@@ -274,6 +274,56 @@ Total duration: 0.01 hours
 
 **Manual Labeling**: Station identification and signal classification must be done manually after capture.
 
+## Measurement Error History
+
+
+### Error #1: Wide-Bandwidth Source Ambiguity
+
+**The Problem**: Initial captures used 2.4 MHz bandwidth centered at varying frequencies (100-142 MHz), creating a capture window that spanned multiple FM stations simultaneously. "Find the loudest peak" would identify different stations as they varied in power throughout the day.
+
+**Symptom**: ±0.8 MHz frequency jumps between captures of supposedly the same target.
+
+**Root Cause**: Algorithm correctly found peaks, but peaks came from different FM stations within the wide capture window. FM stations have time-varying transmit power (programming changes, transmitter adjustments), so "loudest" changed identity.
+
+**The Fix**: Switched to narrow targeting with validation captures. Wide-bandwidth "find anything" approaches introduce source ambiguity. Target specific frequencies, validate systematically.
+
+
+### Error #2: Single-Feature Validation Fallacy
+
+**The Problem**: After fixing source ambiguity with narrow targeting, captures still showed ±0.5 MHz peak frequency instability across time-series captures of the same station. Relying solely on peak frequency detection via FFT bin maximum was insufficient to validate station identity.
+
+**Symptom**: Captures logged as "105.9 Mhz" could actually contain signals from 105.4 MHz, or 106.3 MHz. Metadata (tuner settings) became unreliable ground truth. What you see is not what you capture. Tuner settings document intention, not reality. Hardware lies, you must validate.
+
+**Root Causes**:
+- SDR Hardware Drift: RTL-SDR tuners exhibit frequency drift due to temperature, clock instability, and DC offset.
+- Single Metric Fragility: Peak frequency alone can't distinguish between:
+  - Same station with slight tuning drift
+  - Different station at nearby frequency 
+  - Weak signal vs. strong signal quality
+  - Clean capture vs. adjacent channel interference
+
+**The Fix**: Multi-feature FM fingerprinting with:
+- Parabolic peak interpolation (sub-bin accuracy)
+- Carrier-to-Noise Ratio (signal quality gate)
+- 3dB bandwidth measurement (validates FM signal shape)
+- Adjacent channel rejection (confirms frequency lock)
+- Spectral rolloff analysis (detects interference)
+
+**Expected Outcome**: Score-based validation where captures must achieve ≥70% confidence across multiple independent features to be considered valid.
+
+**References**:
+1. [A Comprehensive Survey on Radio Frequency (RF) Fingerprinting](https://arxiv.org/abs/2201.00680)
+2. [Quadratic Interpolation of Spectral Peaks](https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html)
+3. [Welch's Method](https://ccrma.stanford.edu/~jos/sasp/Welch_s_Method.html)
+4. [Improving FFT Frequency Measurement Resolution by Parabolic and Gaussian Interpolation](https://mgasior.web.cern.ch/pap/FFT_resol_note.pdf)
+5. [Stanford EE179](https://web.stanford.edu/class/ee179/labs/Lab5.html)
+6. [Automatic noise level estimation and occupied bandwidth detection](https://dsp.stackexchange.com/questions/98190/automatic-noise-level-estimation-and-occupied-bandwidth-detection)
+7. [Frequency Modulation, FM Sidebands & Bandwidth](https://www.electronics-notes.com/articles/radio/modulation/frequency-modulation-fm-sidebands-bandwidth.php)
+8. [Frequency Modulation (FM) Tutorial](https://wwwqa.silabs.com/documents/public/white-papers/FMTutorial.pdf)
+9. [Spectral leakage and windowing](https://brianmcfee.net/dstbook-site/content/ch06-dft-properties/Leakage.html)
+10. [FFT Spectral Leakage and Windowing](http://saadahmad.ca/fft-spectral-leakage-and-windowing/)
+
+
 ## Data Storage
 
 - **Sample rate**: 2.4 MHz (2.4 million complex samples/second)
