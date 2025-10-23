@@ -1,4 +1,4 @@
-# Measurement Validation Notebooks
+# Measurement Validation 
 
 This directory contains Jupyter notebooks documenting measurement issues discovered during development and their solutions.
 
