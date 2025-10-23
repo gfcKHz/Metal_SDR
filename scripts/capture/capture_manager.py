@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-""" 
-Hardware-agnostic RF capture manager
-
-Supports multiple SDR backends via plugin architecture
-"""
-
 from abc import ABC, abstractmethod
 from pathlib import Path
 import numpy as np 

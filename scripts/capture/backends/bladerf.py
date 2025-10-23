@@ -11,7 +11,7 @@ import numpy as np
 class BladeRFBackend(SDRBackend):
     """BladeRF 2.0 backend using bladeRF Python API"""
     def __init__(self):
-        """Initialize BladeRF backed"""
+        """Initialize BladeRF backend"""
         try:
             import bladerf
             self.bladerf = bladerf
@@ -71,8 +71,6 @@ class BladeRFBackend(SDRBackend):
             "  6. Return normalized complex64 array\n"
         )
 
-        # Placeholder for future implementation:
-        #
         # # Validate frequency range
         # min_freq, max_freq = self.get_frequency_range()
         # if not (min_freq <= center_freq <= max_freq):

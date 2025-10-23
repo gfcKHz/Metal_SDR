@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""
-Hardware-agnostic batch capture
-
-Supports multiple SDR backends via --backend flag
-"""
-
 import argparse
 import time
 from pathlib import Path

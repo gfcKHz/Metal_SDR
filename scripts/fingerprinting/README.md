@@ -1,6 +1,6 @@
 # FM Broadcast Fingerprinting
 
-Automated spectral feature extraction for FM broadcast station identification and signal quality validation.
+Spectral feature extraction for FM broadcast station identification and signal quality validation.
 
 ## Overview
 
