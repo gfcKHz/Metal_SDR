@@ -20,13 +20,3 @@ This directory contains Jupyter notebooks documenting measurement issues discove
 - Informed the design of the CNR estimation (MPA) to reject spurious peaks
 - Validated temporal consistency requirements for fingerprinting system
 
----
-
-## Purpose
-
-These notebooks are **not production code** - they are exploratory analysis documenting:
-- Measurement problems encountered
-- Root cause analysis
-- Solutions implemented in the main codebase
-
-Think of these as "lab notebooks" showing the engineering process, not the final product.
