@@ -144,17 +144,28 @@ Hardware-agnostic RF signal fingerprinting and classification pipeline.
 
 ### Capture Scripts
 
-**`capture_rtl_real.py`** - Single capture
-- Captures IQ samples from RTL-SDR via `rtl_sdr.exe`
-- Converts raw uint8 IQ to float32 complex format
-- Stores as SigMF file pair (data + metadata)
-- Logs capture metadata to SQLite database
-- Default: 5 seconds at 100 MHz, 2.4 Msps, gain=20 dB
+**`capture_manager.py`** - Hardware abstraction layer
+- Defines `SDRBackend` interface for pluggable hardware
+- Factory function to get backend by name (`rtl-sdr`, `bladerf`)
+- Lists available backends and their status
 
-**`batch_capture.py`** - Batch time-series captures
+**`backends/rtl_sdr.py`** - RTL-SDR backend
+- Captures IQ samples via `rtl_sdr` binary
+- Converts raw uint8 IQ to complex64 format
+- Frequency range: 24 MHz - 1.7 GHz
+- Sample rates: 2.4 Msps (standard)
+
+**`backends/bladerf.py`** - BladeRF backend (skeleton)
+- Placeholder for future BladeRF 2.0 support
+- Frequency range: 47 MHz - 6 GHz
+- Sample rates: Up to 61.44 Msps, 2x2 MIMO
+- Raises NotImplementedError until hardware acquired
+
+**`batch_capture.py`** - Batch capture with hardware selection
+- Supports multiple SDR backends via `--backend` flag
 - Runs multiple captures with configurable time intervals
-- Useful for tracking station stability over time
-- Default: 10 captures, 5-minute intervals, 105.9 MHz
+- Usage: `python batch_capture.py --backend rtl-sdr --freq 105.9e6`
+- See `docs/USAGE.md` for examples
 
 ### Data Pipeline
 
