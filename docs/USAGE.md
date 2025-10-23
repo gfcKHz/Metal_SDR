@@ -112,5 +112,3 @@ python batch_capture.py \
 | `--num-captures` | `10` | Number of captures |
 | `--interval` | `300` | Interval between captures (seconds) |
 | `--list-backends` | - | List available backends and exit |
-
----
