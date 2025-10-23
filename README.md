@@ -330,6 +330,7 @@ Total duration: 0.01 hours
 - [Spectral leakage and windowing](https://brianmcfee.net/dstbook-site/content/ch06-dft-properties/Leakage.html)
 - [FFT Spectral Leakage and Windowing](http://saadahmad.ca/fft-spectral-leakage-and-windowing/)
 - [WYSINWYX: What You See Is Not What You eXecute](https://research.cs.wisc.edu/wpis/papers/wysinwyx05.pdf)
+- [Simple Synchronization using CSP](https://cyclostationary.blog/2019/04/26/simple-synchronization-using-csp/)
 
 
 ## Current Limitations
