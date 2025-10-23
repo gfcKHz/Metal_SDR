@@ -177,10 +177,7 @@ Hardware-agnostic RF signal fingerprinting pipeline.
 
 **`sqlite_logger.py`** - Database manifest
 - Initializes SQLite database schema
-- Logs capture metadata: timestamp, frequency, sample rate, gain, duration, file path, hash. 
-
-  - Naively, I thought these hardware settings were the actual representation of the signal I was trying to capture but these are merely intentions (what you asked the SDR to do), this doesn't tell you what station you actually captured, if the signal is even present, or whether you're on-frequency or drifted
-  
+- Logs capture metadata: timestamp, frequency, sample rate, gain, duration, file path, hash
 - Supports optional labeling (signal type, measured frequency)
 - Database location: `data/captures/capture_manifest.db`
 

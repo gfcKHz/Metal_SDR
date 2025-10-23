@@ -2,6 +2,22 @@
 
 Spectral feature extraction for FM broadcast station identification and signal quality validation.
 
+## Why Fingerprinting?
+
+SDR capture metadata (center frequency, sample rate, gain) represents **what you asked the SDR to do**, not **what signal you actually received**.
+
+**Naive assumption**: "I set `center_freq=105.9e6`, so I captured WKRP 105.9 FM"
+
+**Reality**:
+- Is the signal even present?
+- Are you on-frequency or drifted?
+- Is this the station you expected, or interference?
+- What's the actual signal quality?
+
+**Fingerprinting answers these questions** by measuring what's actually in the IQ data, not what you intended to capture.
+
+---
+
 ## Overview
 
 This system extracts **Tier-1 spectral fingerprints** from captured IQ data to:
