@@ -1,6 +1,6 @@
 # Measurement Validation 
 
-This directory contains Jupyter notebooks documenting measurement issues discovered during development and their solutions.
+This directory contains notebooks documenting measurement issues discovered during development and their solutions.
 
 ## fm_repeatability_test.ipynb
 
