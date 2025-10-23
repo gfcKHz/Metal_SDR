@@ -1,57 +1,54 @@
 # Metal_SDR
 
-Over-the-air RF capture and spectral validation toolkit.
+RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
 
 ## Current System Overview
 
-**Purpose**: Capture real over-the-air signals, quantify propagation drift, and validate spectral integrity using reproducible DSP measurements. Every capture is stored as SigMF with manifest metadata to track carrier offset, CNR degradation, and interference across repeated observations.
+**Purpose**: Capture IQ samples from RTL-SDR hardware, store in SigMF format, and maintain a SQLite manifest for tracking captures over time.
 
-**Hardware**:
-- RTL-SDR (current): FM broadcast, ADS-B, LoRa
-- BladeRF 2.0 (planned): LTE, WiFi, wideband signals
+**Hardware**: RTL-SDR (R828D v4)
 
-**Signals**: WBFM broadcast (current focus), ADS-B bursts, LoRa chirps; planned expansion to LTE/WiFi OFDM captures with BladeRF.
-
-### Signal Processing Highlights
-- Welch PSD with Hann windowing (4096-point, 50% overlap) for spectral estimates
-- Parabolic peak interpolation for sub-bin carrier tracking
-- Minimum-power-averaging CNR and 3 dB bandwidth checks to validate captures
-- Adjacent-channel rejection and rolloff analysis to flag interference
+**Target Signals**: FM broadcast stations (87.5-108 MHz)
 
 ## Architecture
 
 ```
-    ┌──────────────────────────────────────────────────────────────────────┐
-    │                        METAL-SDR PIPELINE                            │
-    └──────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            METAL-SDR PIPELINE                           │
+└─────────────────────────────────────────────────────────────────────────┘
 
-    ┌──────────────────────────────────────────────────────────────────────┐
-    │                    PHYSICAL LAYER (RF Hardware)                      │
-    │                                                                      │
-    │  RTL-SDR (current):  24 MHz - 1.7 GHz, 2.4 Msps, 8-bit               │
-    │  BladeRF 2.0 (planned): 47 MHz - 6 GHz, 61.44 Msps, 12-bit, MIMO     │
-    │                                                                      │
-    └────────┬─────────────────────────────────────────────────────────────┘
+    ┌──────────────────┐
+    │  RTL-SDR R828D   │  ← Hardware (Production: Hades Canyon NUC)
+    │   915 MHz ISM    │    Development: M2 MacBook + portable SDR
+    └────────┬─────────┘    Future: Ettus B210 (Jan 2025)
              │
-             │ USB 2.0/3.0
+             │ USB 2.0
              ▼
     ┌──────────────────────────────────────────────────────────────────────┐
-    │              HARDWARE ABSTRACTION LAYER (capture_manager.py)         │
+    │                       rtl_sdr.exe CAPTURE                            │
     │  ┌────────────────────────────────────────────────────────────────┐  │
-    │  │  SDRBackend Interface (ABC):                                   │  │
-    │  │    - capture(freq, sample_rate, duration, gain) → IQ array     │  │
-    │  │    - get_supported_sample_rates() → list                       │  │
-    │  │    - get_frequency_range() → (min_hz, max_hz)                  │  │
-    │  │                                                                │  │
-    │  │  Implementations:                                              │  │
-    │  │    RTLSDRBackend   (rtl_sdr binary via subprocess)             │  │
-    │  │    BladeRFBackend  (bladeRF Python API) [planned]              │  │
-    │  │                                                                │  │
-    │  │  Output: Normalized complex64 numpy array                      │  │
+    │  │  Command: rtl_sdr -f <freq> -s 2.4e6 -n <samples> output.bin   │  │
+    │  │  Output: Raw IQ samples (uint8, interleaved I/Q)               │  │
     │  └────────────────────────────────────────────────────────────────┘  │
     └────────┬─────────────────────────────────────────────────────────────┘
              │
-             │ complex64 numpy array (hardware-agnostic from here down)
+             │ .bin file (uint8 I/Q)
+             ▼
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                      IQ PROCESSING LAYER                                    │
+    │  ┌───────────────────────────────────────────────────────────────────────┐  │
+    │  │  1. Convert uint8 → complex float32 (line 78, capture_rtl_real.py)    │  │
+    │  │     scale = (iq_u8 - 127.5) / 127.5                                   │  │
+    │  │                                                                       │  │
+    │  │  2. DC offset removal (optional)                                      │  │
+    │  │     iq_centered = iq - mean(iq)                                       │  │
+    │  │                                                                       │  │
+    │  │  3. IQ imbalance correction (future)                                  │  │
+    │  │     α = amplitude_factor, θ = phase_offset                            │  │
+    │  └───────────────────────────────────────────────────────────────────────┘  │
+    └────────┬────────────────────────────────────────────────────────────────────┘
+             │
+             │ complex64 array
              ▼
     ┌──────────────────────────────────────────────────────────────────────┐
     │                        SIGMF FORMATTER                               │
@@ -101,7 +98,7 @@ Over-the-air RF capture and spectral validation toolkit.
              │ Query captures
              ▼
     ┌──────────────────────────────────────────────────────────────────────┐
-    │              FEATURE EXTRACTION (extract_fingerprints.py)            │
+    │                    FEATURE EXTRACTION (extract_fingerprints.py)      │
     │  ┌────────────────────────────────────────────────────────────────┐  │
     │  │  FOR EACH .sigmf-data file:                                    │  │
     │  │                                                                │  │
@@ -123,24 +120,12 @@ Over-the-air RF capture and spectral validation toolkit.
              │ Validated features
              ▼
     ┌──────────────────────────────────────────────────────────────────────┐
-    │                  ANALYSIS & APPLICATIONS LAYER                       │
+    │                      ML TRAINING PIPELINE (FUTURE)                   │
     │  ┌────────────────────────────────────────────────────────────────┐  │
-    │  │  Signal-Specific Analysis:                                     │  │
-    │  │                                                                │  │
-    │  │  FM Broadcast (current - RTL-SDR):                             │  │
-    │  │    - Station identity validation via spectral fingerprints     │  │
-    │  │    - Frequency drift tracking over time                        │  │
-    │  │    - Quality monitoring (CNR degradation detection)            │  │
-    │  │                                                                │  │
-    │  │  LTE (planned - BladeRF):                                      │  │
-    │  │    - Cell tower fingerprinting                                 │  │
-    │  │    - Handoff boundary mapping                                  │  │
-    │  │    - Carrier aggregation detection                             │  │
-    │  │                                                                │  │
-    │  │  WiFi (planned - BladeRF):                                     │  │
-    │  │    - Access point identification                               │  │
-    │  │    - Channel occupancy analysis                                │  │
-    │  │    - Interference source localization                          │  │
+    │  │  • Graph Neural Network (GNN) for spectral topology            │  │
+    │  │  • Transformer for temporal patterns                           │  │
+    │  │  • Few-shot learning (300-400 captures, small dataset)         │  │
+    │  │  • Metal acceleration on Apple Silicon (M2 MacBook)            │  │
     │  └────────────────────────────────────────────────────────────────┘  │
     └──────────────────────────────────────────────────────────────────────┘
 
@@ -150,47 +135,47 @@ Over-the-air RF capture and spectral validation toolkit.
 
 ### Capture Scripts
 
-**`capture_manager.py`** – Multi-SDR capture interface  
-- Presents a common API so tools can switch between RTL-SDR, BladeRF, or future radios  
-- Keeps track of which backends are available on the host
+**`capture_rtl_real.py`** - Single capture
+- Captures IQ samples from RTL-SDR via `rtl_sdr.exe`
+- Converts raw uint8 IQ to float32 complex format
+- Stores as SigMF file pair (data + metadata)
+- Logs capture metadata to SQLite database
+- Default: 5 seconds at 100 MHz, 2.4 Msps, gain=20 dB
 
-**`backends/rtl_sdr.py`** – RTL-SDR driver wrapper  
-- Invokes the `rtl_sdr` utility, normalizes its 8-bit IQ stream to complex64  
-- Validates tuner settings against the dongle’s 24 MHz – 1.7 GHz range  
-- Default operating point: 2.4 Msps wideband FM captures
-
-**`backends/bladerf.py`** – BladeRF 2.0 placeholder  
-- Documents the planned Soapy/bladeRF flow for 47 MHz – 6 GHz coverage  
-- Raises `NotImplementedError` until hardware is on the bench
-
-**`batch_capture.py`** – Repeated over-the-air logging  
-- Schedules back-to-back captures with dwell time, using any supported SDR  
-- Emits SigMF + manifest entries for drift tracking across hours or days  
-- Usage: `python scripts/capture/batch_capture.py --backend rtl_sdr --freq 105.9e6`
+**`batch_capture.py`** - Batch time-series captures
+- Runs multiple captures with configurable time intervals
+- Useful for tracking station stability over time
+- Default: 10 captures, 5-minute intervals, 105.9 MHz
 
 ### Data Pipeline
 
-**`capture_sigmf.py`** – SigMF formatter  
-- Writes the complex64 IQ buffer plus metadata compliant with the [SigMF specification](https://sigmf.org/index.html)  
-- Attaches calibrated parameters (center frequency, sample rate, gain, timestamp) and a BLAKE3 integrity hash  
+**`capture_sigmf.py`** - SigMF file handling
+- Converts IQ samples to SigMF format (compliant with [SigMF specification](https://sigmf.org/index.html))
+- Generates metadata JSON with capture parameters
+- Computes BLAKE3 hash for data integrity
 - File naming: `capture_YYYYMMDD_HHMMSS_<freq>Mhz.sigmf-{data,meta}`
 
-**`sqlite_logger.py`** – Capture manifest  
-- Maintains the SQLite catalog of every over-the-air recording  
-- Stores tuner settings, measured file size, hashes, operator notes, and optional validation scores  
-- Lives alongside the SigMF data at `data/captures/capture_manifest.db`
+**`sqlite_logger.py`** - Database manifest
+- Initializes SQLite database schema
+- Logs capture metadata: timestamp, frequency, sample rate, gain, duration, file path, hash. 
 
-**`analyze_captures.py`** – Frequency occupancy summary  
-- Aggregates captures by tuned frequency to show drift, volume, and observation windows  
-- Useful for spotting day-to-night propagation changes or gaps in the dataset
+  - Naively, I thought these hardware settings were the actual representation of the signal I was trying to capture but these are merely intentions (what you asked the SDR to do), this doesn't tell you what station you actually captured, if the signal is even present, or whether you're on-frequency or drifted
+  
+- Supports optional labeling (signal type, measured frequency)
+- Database location: `data/captures/capture_manifest.db`
+
+**`analyze_captures.py`** - Summary statistics
+- Queries database for capture summaries by frequency
+- Reports total captures, data size, time range per frequency
 
 ### Configuration
 
-**`config.py`** – Storage layout  
-- Central place to point captures and temp IQ buffers at fast local disks (Windows defaults shown, override as needed)
+**`config.py`** - Path configuration
+- Cross-platform base directory handling
+- Defines capture storage location: `D:/dataset/sdr-pipeline/data/captures` (Windows)
 
-**`models.py`** – Data structures  
-- `Capture` dataclass encapsulates the SigMF pair + metadata for downstream processing
+**`models.py`** - Data structures
+- `Capture` dataclass: immutable capture artifact with metadata
 
 ## Database Schema
 
@@ -224,25 +209,20 @@ CREATE TABLE labels (
 
 ## Usage
 
-### List Backends
+### Single Capture
 ```bash
-python scripts/capture/batch_capture.py --list-backends
-```
-
-### Quick Single Capture
-```bash
-python scripts/capture/quick_capture.py --backend rtl_sdr --freq 105.9 --sample-rate 2.4 --duration 3 --gain 20
+python capture_rtl_real.py --freq 105.9e6 --duration 3 --gain 20
 ```
 
 ### Batch Capture
 ```bash
 # Capture WQXR (105.9 MHz) every 5 minutes, 10 times
-python scripts/capture/batch_capture.py --backend rtl_sdr --freq 105.9e6 --num-captures 10 --interval 300
+python batch_capture.py --freq 105.9e6 --num-captures 10 --interval 300
 ```
 
 ### Analyze Captured Data
 ```bash
-python scripts/utils/analyze_captures.py
+python analyze_captures.py
 ```
 
 Example output:
@@ -284,9 +264,8 @@ Total duration: 0.01 hours
 }
 ```
 
-## Lessons from the Field
+## Measurement Error History
 
-Real captures surface propagation effects and hardware limits that don't show up in synthetic datasets. These notes summarize the debugging trail.
 
 ### Wide-Bandwidth Source Ambiguity
 
@@ -323,18 +302,17 @@ Real captures surface propagation effects and hardware limits that don't show up
 **Expected Outcome**: Score-based validation where captures must achieve ≥70% confidence across multiple independent features to be considered valid.
 
 **References**:
-- [A Comprehensive Survey on Radio Frequency Fingerprinting](https://arxiv.org/abs/2201.00680)
-- [Quadratic Interpolation of Spectral Peaks](https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html)
-- [Welch's Method (Stanford)](https://ccrma.stanford.edu/~jos/sasp/Welch_s_Method.html)
-- [Improving FFT Frequency Measurement Resolution by Parabolic and Gaussian Interpolation](https://mgasior.web.cern.ch/pap/FFT_resol_note.pdf)
-- [Stanford EE179](https://web.stanford.edu/class/ee179/labs/Lab5.html)
-- [Automatic noise level estimation and occupied bandwidth detection](https://dsp.stackexchange.com/questions/98190/automatic-noise-level-estimation-and-occupied-bandwidth-detection)
-- [Frequency Modulation, FM Sidebands & Bandwidth](https://www.electronics-notes.com/articles/radio/modulation/frequency-modulation-fm-sidebands-bandwidth.php)
-- [Frequency Modulation Tutorial](https://wwwqa.silabs.com/documents/public/white-papers/FMTutorial.pdf)
-- [Spectral leakage and windowing](https://brianmcfee.net/dstbook-site/content/ch06-dft-properties/Leakage.html)
-- [FFT Spectral Leakage and Windowing](http://saadahmad.ca/fft-spectral-leakage-and-windowing/)
-- [WYSINWYX: What You See Is Not What You eXecute](https://research.cs.wisc.edu/wpis/papers/wysinwyx05.pdf)
-- [Simple Synchronization using CSP](https://cyclostationary.blog/2019/04/26/simple-synchronization-using-csp/)
+1. [A Comprehensive Survey on Radio Frequency (RF) Fingerprinting](https://arxiv.org/abs/2201.00680)
+2. [Quadratic Interpolation of Spectral Peaks](https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html)
+3. [Welch's Method](https://ccrma.stanford.edu/~jos/sasp/Welch_s_Method.html)
+4. [Improving FFT Frequency Measurement Resolution by Parabolic and Gaussian Interpolation](https://mgasior.web.cern.ch/pap/FFT_resol_note.pdf)
+5. [Stanford EE179](https://web.stanford.edu/class/ee179/labs/Lab5.html)
+6. [Automatic noise level estimation and occupied bandwidth detection](https://dsp.stackexchange.com/questions/98190/automatic-noise-level-estimation-and-occupied-bandwidth-detection)
+7. [Frequency Modulation, FM Sidebands & Bandwidth](https://www.electronics-notes.com/articles/radio/modulation/frequency-modulation-fm-sidebands-bandwidth.php)
+8. [Frequency Modulation (FM) Tutorial](https://wwwqa.silabs.com/documents/public/white-papers/FMTutorial.pdf)
+9. [Spectral leakage and windowing](https://brianmcfee.net/dstbook-site/content/ch06-dft-properties/Leakage.html)
+10. [FFT Spectral Leakage and Windowing](http://saadahmad.ca/fft-spectral-leakage-and-windowing/)
+11. [WYSINWYX: What You See Is Not What You eXecute](https://research.cs.wisc.edu/wpis/papers/wysinwyx05.pdf)
 
 
 ## Current Limitations
