@@ -4,7 +4,7 @@ Hardware-agnostic RF signal fingerprinting and classification pipeline.
 
 ## Current System Overview
 
-**Purpose**: Capture, fingerprint, and classify RF signals using modular SDR backends. Store captures in SigMF format with SQLite manifest for temporal analysis.
+**Purpose**: Capture, fingerprint, and classify RF signals using modular SDR backends. Store captures in SigMF format with SQLite manifest. Track frequency drift, CNR degradation, and anomalies across repeated captures.
 
 **Hardware**:
 - RTL-SDR (current): FM broadcast, ADS-B, LoRa
