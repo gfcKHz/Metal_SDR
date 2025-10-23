@@ -1,14 +1,16 @@
 # Metal_SDR
 
-RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
+Hardware-agnostic RF signal fingerprinting and classification pipeline.
 
 ## Current System Overview
 
-**Purpose**: Capture IQ samples from RTL-SDR hardware, store in SigMF format, and maintain a SQLite manifest for tracking captures over time.
+**Purpose**: Capture, fingerprint, and classify RF signals using modular SDR backends. Store captures in SigMF format with SQLite manifest. Track frequency drift, CNR degradation, and anomalies across repeated captures.
 
-**Hardware**: RTL-SDR (R828D v4)
+**Hardware**:
+- RTL-SDR (current): FM broadcast, ADS-B, LoRa
+- BladeRF 2.0 (planned): LTE, WiFi, wideband signals
 
-**Target Signals**: FM broadcast stations (87.5-108 MHz)
+**Signals**: FM broadcast (current), LTE/WiFi (future)
 
 ## Architecture
 
@@ -17,38 +19,33 @@ RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
 │                            METAL-SDR PIPELINE                           │
 └─────────────────────────────────────────────────────────────────────────┘
 
-    ┌──────────────────┐
-    │  RTL-SDR R828D   │  ← Hardware (Production: Hades Canyon NUC)
-    │   915 MHz ISM    │    Development: M2 MacBook + portable SDR
-    └────────┬─────────┘    Future: Ettus B210 (Jan 2025)
+    ┌──────────────────────────────────────────────────────────────────────┐
+    │                    PHYSICAL LAYER (RF Hardware)                      │
+    │                                                                      │
+    │  RTL-SDR (current):  24 MHz - 1.7 GHz, 2.4 Msps, 8-bit               │
+    │  BladeRF 2.0 (planned): 47 MHz - 6 GHz, 61.44 Msps, 12-bit, MIMO     │
+    │                                                                      │
+    └────────┬─────────────────────────────────────────────────────────────┘
              │
-             │ USB 2.0
+             │ USB 2.0/3.0
              ▼
     ┌──────────────────────────────────────────────────────────────────────┐
-    │                       rtl_sdr.exe CAPTURE                            │
+    │              HARDWARE ABSTRACTION LAYER (capture_manager.py)         │
     │  ┌────────────────────────────────────────────────────────────────┐  │
-    │  │  Command: rtl_sdr -f <freq> -s 2.4e6 -n <samples> output.bin   │  │
-    │  │  Output: Raw IQ samples (uint8, interleaved I/Q)               │  │
+    │  │  SDRBackend Interface (ABC):                                   │  │
+    │  │    - capture(freq, sample_rate, duration, gain) → IQ array     │  │
+    │  │    - get_supported_sample_rates() → list                       │  │
+    │  │    - get_frequency_range() → (min_hz, max_hz)                  │  │
+    │  │                                                                │  │
+    │  │  Implementations:                                              │  │
+    │  │    RTLSDRBackend   (rtl_sdr binary via subprocess)             │  │
+    │  │    BladeRFBackend  (bladeRF Python API) [planned]              │  │
+    │  │                                                                │  │
+    │  │  Output: Normalized complex64 numpy array                      │  │
     │  └────────────────────────────────────────────────────────────────┘  │
     └────────┬─────────────────────────────────────────────────────────────┘
              │
-             │ .bin file (uint8 I/Q)
-             ▼
-    ┌─────────────────────────────────────────────────────────────────────────────┐
-    │                      IQ PROCESSING LAYER                                    │
-    │  ┌───────────────────────────────────────────────────────────────────────┐  │
-    │  │  1. Convert uint8 → complex float32 (line 74: capture_rtl_real.py)    │  │
-    │  │     scale = (iq_u8 - 127.5) / 127.5                                   │  │
-    │  │                                                                       │  │
-    │  │  2. DC offset removal (optional)                                      │  │
-    │  │     iq_centered = iq - mean(iq)                                       │  │
-    │  │                                                                       │  │
-    │  │  3. IQ imbalance correction (future)                                  │  │
-    │  │     α = amplitude_factor, θ = phase_offset                            │  │
-    │  └───────────────────────────────────────────────────────────────────────┘  │
-    └────────┬────────────────────────────────────────────────────────────────────┘
-             │
-             │ complex64 array
+             │ complex64 numpy array (hardware-agnostic from here down)
              ▼
     ┌──────────────────────────────────────────────────────────────────────┐
     │                        SIGMF FORMATTER                               │
@@ -120,12 +117,24 @@ RTL-SDR capture pipeline for FM broadcast monitoring and signal analysis.
              │ Validated features
              ▼
     ┌──────────────────────────────────────────────────────────────────────┐
-    │                      ML TRAINING PIPELINE (FUTURE)                   │
+    │                  ANALYSIS & APPLICATIONS LAYER                       │
     │  ┌────────────────────────────────────────────────────────────────┐  │
-    │  │  • Graph Neural Network (GNN) for spectral topology            │  │
-    │  │  • Transformer for temporal patterns                           │  │
-    │  │  • Few-shot learning (300-400 captures, small dataset)         │  │
-    │  │  • Metal acceleration on Apple Silicon (M2 MacBook)            │  │
+    │  │  Signal-Specific Analysis:                                     │  │
+    │  │                                                                │  │
+    │  │  FM Broadcast (current - RTL-SDR):                             │  │
+    │  │    - Station identity validation via spectral fingerprints     │  │
+    │  │    - Frequency drift tracking over time                        │  │
+    │  │    - Quality monitoring (CNR degradation detection)            │  │
+    │  │                                                                │  │
+    │  │  LTE (planned - BladeRF):                                      │  │
+    │  │    - Cell tower fingerprinting                                 │  │
+    │  │    - Handoff boundary mapping                                  │  │
+    │  │    - Carrier aggregation detection                             │  │
+    │  │                                                                │  │
+    │  │  WiFi (planned - BladeRF):                                     │  │
+    │  │    - Access point identification                               │  │
+    │  │    - Channel occupancy analysis                                │  │
+    │  │    - Interference source localization                          │  │
     │  └────────────────────────────────────────────────────────────────┘  │
     └──────────────────────────────────────────────────────────────────────┘
 
