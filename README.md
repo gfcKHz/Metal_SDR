@@ -165,7 +165,7 @@ Hardware-agnostic RF signal fingerprinting and classification pipeline.
 - Supports multiple SDR backends via `--backend` flag
 - Runs multiple captures with configurable time intervals
 - Usage: `python batch_capture.py --backend rtl-sdr --freq 105.9e6`
-- See `docs/USAGE.md` for examples
+- See [docs/USAGE.md](docs/USAGE.md) for examples
 
 ### Data Pipeline
 
