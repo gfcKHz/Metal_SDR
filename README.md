@@ -4,7 +4,7 @@ Hardware-agnostic RF signal fingerprinting and classification pipeline.
 
 ## Current System Overview
 
-**Purpose**: Capture, fingerprint, and classify RF signals using modular SDR backends. Store captures in SigMF format with SQLite manifest. Track frequency drift, CNR degradation, and anomalies across repeated captures.
+**Purpose**: Capture, fingerprint, and classify RF signals using modular SDR backends. Store captures in SigMF format with SQLite manifest for temporal analysis.
 
 **Hardware**:
 - RTL-SDR (current): FM broadcast, ADS-B, LoRa
@@ -15,9 +15,9 @@ Hardware-agnostic RF signal fingerprinting and classification pipeline.
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            METAL-SDR PIPELINE                           │
-└─────────────────────────────────────────────────────────────────────────┘
+    ┌──────────────────────────────────────────────────────────────────────┐
+    │                        METAL-SDR PIPELINE                            │
+    └──────────────────────────────────────────────────────────────────────┘
 
     ┌──────────────────────────────────────────────────────────────────────┐
     │                    PHYSICAL LAYER (RF Hardware)                      │
@@ -95,7 +95,7 @@ Hardware-agnostic RF signal fingerprinting and classification pipeline.
              │ Query captures
              ▼
     ┌──────────────────────────────────────────────────────────────────────┐
-    │                    FEATURE EXTRACTION (extract_fingerprints.py)      │
+    │              FEATURE EXTRACTION (extract_fingerprints.py)            │
     │  ┌────────────────────────────────────────────────────────────────┐  │
     │  │  FOR EACH .sigmf-data file:                                    │  │
     │  │                                                                │  │
