@@ -68,6 +68,10 @@ logs/
 
 # Temporary files
 *.tmp
-*.tempu v . l o c k 
+*.temp
+
+# Package lock files
+uv.lock
+poetry.locku v . l o c k 
  
  
