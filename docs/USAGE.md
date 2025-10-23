@@ -114,22 +114,3 @@ python batch_capture.py \
 | `--list-backends` | - | List available backends and exit |
 
 ---
-
-## Migration Notes
-
-### Backward Compatibility
-
-- `capture_rtl_real.py` kept for reference (not deleted)
-- All existing .sigmf-data files work unchanged
-- Database schema unchanged
-- No changes needed to fingerprinting scripts
-
-### Future Hardware Addition
-
-To add new SDR hardware (e.g., HackRF, USRP):
-
-1. Create `backends/hackrf.py`
-2. Implement `SDRBackend` interface
-3. Add to `get_backend()` factory in `capture_manager.py`
-4. Update `list_backends()`
-5. **No other code changes needed**
