@@ -113,14 +113,14 @@ def update_fingerprint(conn: sqlite3.Connection, capture_id: int, features: dict
     """
     conn.execute("""
         UPDATE fingerprints SET
-            peak_freq_hz = ?
-            freq_error_hz = ?
-            cnr_db = ?
-            bandwidth_3db_hz = ?
-            adjacent_rejection_db = ?
-            rolloff_left_slope = ?
-            rolloff_right_slope = ?
-            rolloff_asymmetry = ?
+            peak_freq_hz = ?,
+            freq_error_hz = ?,
+            cnr_db = ?,
+            bandwidth_3db_hz = ?,
+            adjacent_rejection_db = ?,
+            rolloff_left_slope = ?,
+            rolloff_right_slope = ?,
+            rolloff_asymmetry = ?,
             processing_time_sec = ?
         WHERE capture_id = ?
     """, (

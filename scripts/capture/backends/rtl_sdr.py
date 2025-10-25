@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 """RTL-SDR hardware backend"""
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from capture.capture_manager import SDRBackend
-import subprocess
-import numpy as np
-import tempfile
 import platform
+import subprocess
+import tempfile
 from pathlib import Path
+
+import numpy as np
+
+from ..capture_manager import SDRBackend
 
 class RTLSDRBackend(SDRBackend):
     """RTL-SDR backend using rtl_sdr binary"""
@@ -19,9 +17,9 @@ class RTLSDRBackend(SDRBackend):
     def name(self) -> str:
         return "rtl-sdr"
     
-    def get_frequency_range(sefl) -> tuple:
+    def get_frequency_range(self) -> tuple:
         """RTL-SDR frequency range"""
-        return (24e6, 1766e6) # 24 Mhz - 1.766 GHz
+        return (24e6, 1766e6)  # 24 MHz - 1.766 GHz
     
     def get_supported_sample_rates(self) -> list:
         """RTL-SDR supports flexible rates, 2.4 Msps is standard"""
@@ -39,7 +37,7 @@ class RTLSDRBackend(SDRBackend):
             gain: Gain in dB
 
         Returns:
-            Complex IQ samples as complex65 numpy array
+            Complex IQ samples as complex64 numpy array
 
         Raises:
             RuntimeError: If rtl_sdr binary fails
@@ -113,4 +111,4 @@ class RTLSDRBackend(SDRBackend):
             try:
                 Path(temp_path).unlink(missing_ok=True)
             except Exception as e:
-                print(f"[RTL-SDR Warning: Could not delete temp file: {e}")
+                print(f"[RTL-SDR] Warning: Could not delete temp file: {e}")

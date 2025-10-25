@@ -1,12 +1,9 @@
 #!/usr/bin/env python3 
 """BladeRF 2.0 hardware backend (skeleton)"""
 
-import sys
-from pathlib import Path
-sys.path.insert(0, srt(Path(__file__).parent.parent.parent))
-
-from capture.capture_manager import SDRBackend
 import numpy as np
+
+from ..capture_manager import SDRBackend
 
 class BladeRFBackend(SDRBackend):
     """BladeRF 2.0 backend using bladeRF Python API"""
@@ -28,7 +25,7 @@ class BladeRFBackend(SDRBackend):
     
     def get_frequency_range(self) -> tuple:
         "BladeRF 2.0 xA9 frequency range"
-        return (47e6, 6e9) # 47 MHz - 6 Ghz
+        return (47e6, 6e9)  # 47 MHz - 6 GHz
     
     def get_supported_sample_rates(self) -> list:
         """BladeRF 2.0 supports up to 61.44 Msps"""

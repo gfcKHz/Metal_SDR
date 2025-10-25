@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from abc import ABC, abstractmethod
-from pathlib import Path
 import numpy as np 
 
 class SDRBackend(ABC):
@@ -30,7 +29,7 @@ class SDRBackend(ABC):
 
     @abstractmethod
     def get_frequency_range(self) -> tuple:
-        """Return list of supported sample rates in Hz"""
+        """Return supported frequency range in Hz"""
         pass
 
     @property
@@ -41,7 +40,7 @@ class SDRBackend(ABC):
 
 def get_backend(backend_name: str) -> SDRBackend:
     """ 
-    Factory function to get SDR backend b7y name
+    Factory function to get SDR backend by name
 
     Args:
         backend_name: 'rtl_sdr', 'bladerf', etc.
@@ -56,11 +55,11 @@ def get_backend(backend_name: str) -> SDRBackend:
     backend_name = backend_name.lower()
 
     if backend_name == "rtl_sdr":
-        from backends.rtl_sdr import RTLSDRBackend
+        from .backends.rtl_sdr import RTLSDRBackend
         return RTLSDRBackend()
     
     elif backend_name == "bladerf":
-        from backends.bladerf import BladeRFBackend
+        from .backends.bladerf import BladeRFBackend
         return BladeRFBackend()
     
     else:
@@ -80,14 +79,14 @@ def list_backends() -> dict:
     
     # RTL-SDR
     try:
-        from backends.rtl_sdr import RTLSDRBackend
+        from .backends.rtl_sdr import RTLSDRBackend
         backends['rtl_sdr'] = 'available'
     except ImportError as e:
         backends['rtl_sdr'] = f'unavailable: {e}'
 
     # BladeRF
     try:
-        from backends.bladerf import BladeRFBackend
+        from .backends.bladerf import BladeRFBackend
         backends['bladerf'] = 'available'
     except ImportError as e:
         backends['bladerf'] = f'unavailable: {e}'

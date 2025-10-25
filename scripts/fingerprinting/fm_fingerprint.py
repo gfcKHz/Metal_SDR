@@ -42,7 +42,7 @@ def load_sigmf(sigmf_path: Path) -> tuple[np.ndarray, dict]:
     meta_path = sigmf_path.with_suffix('.sigmf-meta')
 
     # Load metadata
-    sig = SigMFFile(str(meta_path))
+    sig = SigMFFile.fromfile(str(meta_path))
 
     # Extract key params
     metadata = {
@@ -128,7 +128,9 @@ def estimate_cnr_db(freqs: np.ndarray, psd: np.ndarray, peak_freq_hz: float,
     
     # MPA: Average quietest N% of bins
     n_bins = max(1, int(len(noise_bins) * noise_percentile / 100.0))
-    noise_floor = np.mean(np.partition(noise_bins, n_bins)[:n_bins])
+    n_bins = min(n_bins, len(noise_bins))
+    kth = n_bins - 1
+    noise_floor = np.mean(np.partition(noise_bins, kth)[:n_bins])
 
     # CNR in dB
     if noise_floor <= 0:
@@ -210,7 +212,7 @@ def measure_adjacent_rejection(freqs: np.ndarray, psd: np.ndarray, peak_freq_hz:
     left_power = np.sum(psd[left_mask])
 
     # Right adjacent channel power (±50 kHz around +200 kHz offset)
-    right_center = peak_freq_hz - channel_spacing_hz
+    right_center = peak_freq_hz + channel_spacing_hz
     right_mask = np.abs(freqs - right_center) <= 50e3
     right_power = np.sum(psd[right_mask])
 
@@ -303,8 +305,8 @@ def extract_fingerprint(iq_data: np.ndarray, sample_rate: float, center_freq: fl
     t0 = time.time()
 
     # Compute Welch PSD
-    nperseg = 4096      # 586 Hz/bin at 2.4 Mhz
-    noverlap = 20489    # 50% overlap
+    nperseg = 4096           # 586 Hz/bin at 2.4 MHz
+    noverlap = nperseg // 2  # 50% overlap
     freqs, psd = signal.welch(
         iq_data,
         fs=sample_rate,
@@ -343,7 +345,7 @@ def extract_fingerprint(iq_data: np.ndarray, sample_rate: float, center_freq: fl
         'peak_freq_hz': peak_freq_hz,
         'freq_error_hz': freq_error_hz,
         'cnr_db': cnr_db,
-        'bandwidth_3b_hz': bandwidth_3db_hz,
+        'bandwidth_3db_hz': bandwidth_3db_hz,
         'adjacent_rejection_db': adjacent_rejection_db,
         'rolloff_left_slope': rolloff['left_slope'],
         'rolloff_right_slope': rolloff['right_slope'],
