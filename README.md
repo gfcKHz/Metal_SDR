@@ -226,20 +226,25 @@ CREATE TABLE labels (
 
 ## Usage
 
-### Single Capture
+### List Backends
 ```bash
-python capture_rtl_real.py --freq 105.9e6 --duration 3 --gain 20
+python scripts/capture/batch_capture.py --list-backends
+```
+
+### Quick Single Capture
+```bash
+python scripts/capture/quick_capture.py --backend rtl_sdr --freq 105.9 --sample-rate 2.4 --duration 3 --gain 20
 ```
 
 ### Batch Capture
 ```bash
 # Capture WQXR (105.9 MHz) every 5 minutes, 10 times
-python batch_capture.py --freq 105.9e6 --num-captures 10 --interval 300
+python scripts/capture/batch_capture.py --backend rtl_sdr --freq 105.9e6 --num-captures 10 --interval 300
 ```
 
 ### Analyze Captured Data
 ```bash
-python analyze_captures.py
+python scripts/utils/analyze_captures.py
 ```
 
 Example output:
