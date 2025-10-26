@@ -1,16 +1,22 @@
 # Metal_SDR
 
-Hardware-agnostic RF signal fingerprinting pipeline.
+Over-the-air RF capture and spectral validation toolkit.
 
 ## Current System Overview
 
-**Purpose**: Capture, fingerprint, and validate RF signals using SDR backends. Store captures in SigMF format with SQLite manifest. Track frequency drift, CNR degradation, and anomalies across repeated captures.
+**Purpose**: Capture real over-the-air signals, quantify propagation drift, and validate spectral integrity using reproducible DSP measurements. Every capture is stored as SigMF with manifest metadata so we can track carrier offset, CNR degradation, and interference across repeated observations.
 
 **Hardware**:
 - RTL-SDR (current): FM broadcast, ADS-B, LoRa
 - BladeRF 2.0 (planned): LTE, WiFi, wideband signals
 
-**Signals**: FM broadcast (current), LTE/WiFi (future)
+**Signals**: WBFM broadcast (current focus), ADS-B bursts, LoRa chirps; planned expansion to LTE/WiFi OFDM captures with BladeRF.
+
+### Signal Processing Highlights
+- Welch PSD with Hann windowing (4096-point, 50% overlap) for spectral estimates
+- Parabolic peak interpolation for sub-bin carrier tracking
+- Minimum-power-averaging CNR and 3 dB bandwidth checks to validate captures
+- Adjacent-channel rejection and rolloff analysis to flag interference
 
 ## Architecture
 
@@ -144,55 +150,47 @@ Hardware-agnostic RF signal fingerprinting pipeline.
 
 ### Capture Scripts
 
-**`capture_manager.py`** - Hardware abstraction layer
-- Defines `SDRBackend` interface for pluggable hardware
-- Factory function to get backend by name (`rtl-sdr`, `bladerf`)
-- Lists available backends and their status
+**`capture_manager.py`** – Multi-SDR capture interface  
+- Presents a common API so tools can switch between RTL-SDR, BladeRF, or future radios  
+- Keeps track of which backends are available on the host
 
-**`backends/rtl_sdr.py`** - RTL-SDR backend
-- Captures IQ samples via `rtl_sdr` binary
-- Converts raw uint8 IQ to complex64 format
-- Frequency range: 24 MHz - 1.7 GHz
-- Sample rates: 2.4 Msps (standard)
+**`backends/rtl_sdr.py`** – RTL-SDR driver wrapper  
+- Invokes the `rtl_sdr` utility, normalizes its 8-bit IQ stream to complex64  
+- Validates tuner settings against the dongle’s 24 MHz – 1.7 GHz range  
+- Default operating point: 2.4 Msps wideband FM captures
 
-**`backends/bladerf.py`** - BladeRF backend (skeleton)
-- Placeholder for future BladeRF 2.0 support
-- Frequency range: 47 MHz - 6 GHz
-- Sample rates: Up to 61.44 Msps, 2x2 MIMO
-- Raises NotImplementedError until hardware acquired
+**`backends/bladerf.py`** – BladeRF 2.0 placeholder  
+- Documents the planned Soapy/bladeRF flow for 47 MHz – 6 GHz coverage  
+- Raises `NotImplementedError` until hardware is on the bench
 
-**`batch_capture.py`** - Batch capture with hardware selection
-- Supports multiple SDR backends via `--backend` flag
-- Runs multiple captures with configurable time intervals
-- Usage: `python batch_capture.py --backend rtl-sdr --freq 105.9e6`
-- See [docs/USAGE.md](docs/USAGE.md) for examples
+**`batch_capture.py`** – Repeated over-the-air logging  
+- Schedules back-to-back captures with dwell time, using any supported SDR  
+- Emits SigMF + manifest entries for drift tracking across hours or days  
+- Usage: `python scripts/capture/batch_capture.py --backend rtl_sdr --freq 105.9e6`
 
 ### Data Pipeline
 
-**`capture_sigmf.py`** - SigMF file handling
-- Converts IQ samples to SigMF format (compliant with [SigMF specification](https://sigmf.org/index.html))
-- Generates metadata JSON with capture parameters
-- Computes BLAKE3 hash for data integrity
+**`capture_sigmf.py`** – SigMF formatter  
+- Writes the complex64 IQ buffer plus metadata compliant with the [SigMF specification](https://sigmf.org/index.html)  
+- Attaches calibrated parameters (center frequency, sample rate, gain, timestamp) and a BLAKE3 integrity hash  
 - File naming: `capture_YYYYMMDD_HHMMSS_<freq>Mhz.sigmf-{data,meta}`
 
-**`sqlite_logger.py`** - Database manifest
-- Initializes SQLite database schema
-- Logs capture metadata: timestamp, frequency, sample rate, gain, duration, file path, hash
-- Supports optional labeling (signal type, measured frequency)
-- Database location: `data/captures/capture_manifest.db`
+**`sqlite_logger.py`** – Capture manifest  
+- Maintains the SQLite catalog of every over-the-air recording  
+- Stores tuner settings, measured file size, hashes, operator notes, and optional validation scores  
+- Lives alongside the SigMF data at `data/captures/capture_manifest.db`
 
-**`analyze_captures.py`** - Summary statistics
-- Queries database for capture summaries by frequency
-- Reports total captures, data size, time range per frequency
+**`analyze_captures.py`** – Frequency occupancy summary  
+- Aggregates captures by tuned frequency to show drift, volume, and observation windows  
+- Useful for spotting day-to-night propagation changes or gaps in the dataset
 
 ### Configuration
 
-**`config.py`** - Path configuration
-- Cross-platform base directory handling
-- Defines capture storage location: `D:/dataset/sdr-pipeline/data/captures` (Windows)
+**`config.py`** – Storage layout  
+- Central place to point captures and temp IQ buffers at fast local disks (Windows defaults shown, override as needed)
 
-**`models.py`** - Data structures
-- `Capture` dataclass: immutable capture artifact with metadata
+**`models.py`** – Data structures  
+- `Capture` dataclass encapsulates the SigMF pair + metadata for downstream processing
 
 ## Database Schema
 
@@ -286,8 +284,9 @@ Total duration: 0.01 hours
 }
 ```
 
-## Measurement Error History
+## Lessons from the Field
 
+Real captures surface propagation effects and hardware limits that don't show up in synthetic datasets. These notes summarize the debugging trail.
 
 ### Wide-Bandwidth Source Ambiguity
 
