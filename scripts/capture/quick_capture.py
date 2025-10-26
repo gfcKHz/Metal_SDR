@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""Quick single capture convenience script."""
-
 import argparse
 import sys
 from pathlib import Path
