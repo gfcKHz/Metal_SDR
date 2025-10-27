@@ -330,7 +330,7 @@ Real captures surface propagation effects and hardware limits that don't show up
 - [Stanford EE179](https://web.stanford.edu/class/ee179/labs/Lab5.html)
 - [Automatic noise level estimation and occupied bandwidth detection](https://dsp.stackexchange.com/questions/98190/automatic-noise-level-estimation-and-occupied-bandwidth-detection)
 - [Frequency Modulation, FM Sidebands & Bandwidth](https://www.electronics-notes.com/articles/radio/modulation/frequency-modulation-fm-sidebands-bandwidth.php)
-- [Frequency Modulation (FM) Tutorial](https://wwwqa.silabs.com/documents/public/white-papers/FMTutorial.pdf)
+- [Frequency Modulation Tutorial](https://wwwqa.silabs.com/documents/public/white-papers/FMTutorial.pdf)
 - [Spectral leakage and windowing](https://brianmcfee.net/dstbook-site/content/ch06-dft-properties/Leakage.html)
 - [FFT Spectral Leakage and Windowing](http://saadahmad.ca/fft-spectral-leakage-and-windowing/)
 - [WYSINWYX: What You See Is Not What You eXecute](https://research.cs.wisc.edu/wpis/papers/wysinwyx05.pdf)
