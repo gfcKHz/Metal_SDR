@@ -4,7 +4,7 @@ Over-the-air RF capture and spectral validation toolkit.
 
 ## Current System Overview
 
-**Purpose**: Capture real over-the-air signals, quantify propagation drift, and validate spectral integrity using reproducible DSP measurements. Every capture is stored as SigMF with manifest metadata so we can track carrier offset, CNR degradation, and interference across repeated observations.
+**Purpose**: Capture real over-the-air signals, quantify propagation drift, and validate spectral integrity using reproducible DSP measurements. Every capture is stored as SigMF with manifest metadata to track carrier offset, CNR degradation, and interference across repeated observations.
 
 **Hardware**:
 - RTL-SDR (current): FM broadcast, ADS-B, LoRa
