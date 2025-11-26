@@ -2,6 +2,8 @@
 
 Hardware-agnostic RF signal fingerprinting and classification.
 
+![BladeRF rig](bladeeee.jpeg)
+
 ## Current System Overview
 
 **Purpose**: Capture, fingerprint, sense, and classify RF signals using modular SDR backends. Store captures in SigMF format with SQLite manifest. Support modulation classification, spectrum sensing, and cognitive radio applications like dynamic spectrum access.
@@ -14,7 +16,49 @@ Hardware-agnostic RF signal fingerprinting and classification.
 
 ## Architecture
 
-(Updated architecture diagram here, incorporating sensing and cognitive layers)
+BladeRF-first capture pipeline (RTL-SDR still supported for narrowband tests):
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        METAL-SDR PIPELINE                            │
+└──────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────────────────────────────────────────────────────────┐
+    │        PHYSICAL LAYER (BladeRF 2.0 Micro / RTL-SDR)              │
+    │  • BladeRF 2.0: 47 MHz–6 GHz | up to 61.44 Msps | 12-bit | MIMO  │
+    │  • RTL-SDR:    24 MHz–1.7 GHz | 2.4 Msps | 8-bit                │
+    └────────┬─────────────────────────────────────────────────────────┘
+             │ complex64 IQ stream (hardware-agnostic from here down)
+             ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │            CAPTURE MANAGER + BACKENDS                            │
+    │  • `batch_capture.py --backend {bladerf,rtlsdr}`                 │
+    │  • Configurable freq, sample rate, duration, gain                │
+    │  • Writes SigMF pair: .sigmf-data (cf32) + .sigmf-meta (JSON)    │
+    └────────┬─────────────────────────────────────────────────────────┘
+             │
+             ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                   MANIFEST + INTEGRITY                           │
+    │  • `sqlite_logger.py`: captures table + hashes                   │
+    │  • BLAKE3 hash stored in meta for tamper detection               │
+    └────────┬─────────────────────────────────────────────────────────┘
+             │
+             ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                 FINGERPRINTING LAYER                             │
+    │  • `fm_fingerprint.py`: PSD, peak freq, CNR, 3 dB BW             │
+    │  • `lte_fingerprint.py`: LTE skeleton (OFDM-centric)             │
+    │  • Shared helpers in `base_fingerprint.py`                       │
+    └────────┬─────────────────────────────────────────────────────────┘
+             │
+             ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │            SENSING + COGNITIVE (IN PROGRESS)                     │
+    │  • Energy/cyclostationary detectors (scripts/sensing/)           │
+    │  • `dynamic_access.py`: dynamic spectrum allocation sketch       │
+    └──────────────────────────────────────────────────────────────────┘
+```
 
 ## Components
 
