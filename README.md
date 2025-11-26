@@ -24,7 +24,7 @@ BladeRF-first capture pipeline (RTL-SDR still supported for narrowband tests):
     ┌──────────────────────────────────────────────────────────────────┐
     │        PHYSICAL LAYER (BladeRF 2.0 Micro / RTL-SDR)              │
     │  • BladeRF 2.0: 47 MHz–6 GHz | up to 61.44 Msps | 12-bit | MIMO  │
-    │  • RTL-SDR:    24 MHz–1.7 GHz | 2.4 Msps | 8-bit                │
+    │  • RTL-SDR:    24 MHz–1.7 GHz | 2.4 Msps | 8-bit                 │
     └────────┬─────────────────────────────────────────────────────────┘
              │ complex64 IQ stream (hardware-agnostic from here down)
              ▼
