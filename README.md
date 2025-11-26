@@ -17,9 +17,9 @@ Hardware-agnostic RF signal fingerprinting and classification.
 BladeRF-first capture pipeline (RTL-SDR still supported for narrowband tests):
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        METAL-SDR PIPELINE                            │
-└──────────────────────────────────────────────────────────────────────┘
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                        METAL-SDR PIPELINE                        │
+    └──────────────────────────────────────────────────────────────────┘
 
     ┌──────────────────────────────────────────────────────────────────┐
     │        PHYSICAL LAYER (BladeRF 2.0 Micro / RTL-SDR)              │
