@@ -2,8 +2,6 @@
 
 Hardware-agnostic RF signal fingerprinting and classification.
 
-![BladeRF rig](bladeeee.jpeg)
-
 ## Current System Overview
 
 **Purpose**: Capture, fingerprint, sense, and classify RF signals using modular SDR backends. Store captures in SigMF format with SQLite manifest. Support modulation classification, spectrum sensing, and cognitive radio applications like dynamic spectrum access.
@@ -50,14 +48,7 @@ BladeRF-first capture pipeline (RTL-SDR still supported for narrowband tests):
     │  • `fm_fingerprint.py`: PSD, peak freq, CNR, 3 dB BW             │
     │  • `lte_fingerprint.py`: LTE skeleton (OFDM-centric)             │
     │  • Shared helpers in `base_fingerprint.py`                       │
-    └────────┬─────────────────────────────────────────────────────────┘
-             │
-             ▼
-    ┌──────────────────────────────────────────────────────────────────┐
-    │            SENSING + COGNITIVE (IN PROGRESS)                     │
-    │  • Energy/cyclostationary detectors (scripts/sensing/)           │
-    │  • `dynamic_access.py`: dynamic spectrum allocation sketch       │
-    └──────────────────────────────────────────────────────────────────┘
+    └───────────────────────────────────────────--─────────────────────┘
 ```
 
 ## Components
@@ -84,4 +75,8 @@ python scripts/capture/batch_capture.py --backend bladerf --freq 1.8e9 --sample-
 python scripts/fingerprinting/lte_fingerprint.py path/to/capture.sigmf-meta
 ```
 
-(Rest of the original content, updated as needed for limitations, data format, etc.)
+---
+
+![BladeRF](bladeeee.jpeg)
+
+---
