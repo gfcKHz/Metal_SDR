@@ -26,13 +26,6 @@ Hardware-agnostic RF signal fingerprinting, classification, spectrum sensing, an
 - `fm_fingerprint.py`: FM-specific features.
 - `lte_fingerprint.py`: LTE features (skeleton).
 
-### Spectrum Sensing
-- `energy_detector.py`: Threshold-based energy detection.
-- `cyclostationary.py`: Cyclostationary feature detection.
-
-### Cognitive Radio
-- `dynamic_access.py`: Simulate dynamic spectrum allocation.
-
 ### Database and Utils
 - `sqlite_logger.py`: Log captures.
 - `analyze_captures.py`: Summary statistics.
