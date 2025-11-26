@@ -49,9 +49,9 @@ dataset/
 !dataset/README.md
 !dataset/notebooks/.gitkeep
 
-# Documentation: keep Pipeline doc tracked, ignore the rest
+# Documentation: keep usage guide tracked, ignore the rest
 docs/*
-!docs/PIPELINE.md
+!docs/USAGE.md
 
 # Cloud sync scripts (personal/private)
 scripts/sync/

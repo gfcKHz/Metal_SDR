@@ -67,7 +67,7 @@ BladeRF-first capture pipeline (RTL-SDR still supported for narrowband tests):
 
 ## Usage
 
-See `docs/PIPELINE.md` for detailed workflows.
+See `docs/USAGE.md` for detailed workflows and testing.
 
 ### Example: BladeRF Capture and Fingerprint
 ```bash
