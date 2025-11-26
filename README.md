@@ -75,8 +75,6 @@ python scripts/capture/batch_capture.py --backend bladerf --freq 1.8e9 --sample-
 python scripts/fingerprinting/lte_fingerprint.py path/to/capture.sigmf-meta
 ```
 
----
+## bladeRF 2.0 micro xA9
 
 ![BladeRF](bladeeee.jpeg)
-
----
