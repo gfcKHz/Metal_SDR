@@ -77,4 +77,4 @@ python scripts/fingerprinting/lte_fingerprint.py path/to/capture.sigmf-meta
 
 ## bladeRF 2.0 micro xA9
 
-![BladeRF](bladeeeRF.jpg)
+![BladeRF](bladeeee.jpeg)
