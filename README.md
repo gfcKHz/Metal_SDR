@@ -48,7 +48,7 @@ BladeRF-first capture pipeline (RTL-SDR still supported for narrowband tests):
     │  • `fm_fingerprint.py`: PSD, peak freq, CNR, 3 dB BW             │
     │  • `lte_fingerprint.py`: LTE skeleton (OFDM-centric)             │
     │  • Shared helpers in `base_fingerprint.py`                       │
-    └───────────────────────────────────────────--─────────────────────┘
+    └──────────────────────────────────────────────────────────────────┘
 ```
 
 ## Components
