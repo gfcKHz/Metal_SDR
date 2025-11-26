@@ -1,6 +1,6 @@
 # Metal_SDR
 
-Hardware-agnostic RF signal fingerprinting, classification, spectrum sensing, and cognitive radio pipeline.
+Hardware-agnostic RF signal fingerprinting and classification.
 
 ## Current System Overview
 
