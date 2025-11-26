@@ -3,8 +3,10 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 
-# Database lives alongside captures
-DB_PATH = Path(__file__).parent.parent / "data" / "captures" / "capture_manifest.db"
+# Database and captures live in dataset/ directory
+# This directory can be synced to cloud storage if desired (see dataset/README.md)
+DB_PATH = Path(__file__).parent.parent.parent / "dataset" / "fingerprints.db"
+CAPTURES_DIR = Path(__file__).parent.parent.parent / "dataset" / "captures"
 
 DDL_CAPTURES = """
 CREATE TABLE IF NOT EXISTS captures (
@@ -55,6 +57,7 @@ CREATE TABLE IF NOT EXISTS fingerprints (
 def init_db():
     """Initialize SQLite database with schema"""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CAPTURES_DIR.mkdir(parents=True, exist_ok=True)
 
     conn = sqlite3.connect(DB_PATH)
     conn.execute(DDL_CAPTURES)
@@ -63,6 +66,7 @@ def init_db():
     conn.commit()
     conn.close()
     print(f"[DB] Initialized SQLite at {DB_PATH}")
+    print(f"[DB] Captures directory: {CAPTURES_DIR}")
 
 def log_to_sqlite(capture: dict) -> int:
     """

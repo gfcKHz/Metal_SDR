@@ -36,12 +36,33 @@ data/
 *.zarr/
 *.samples
 
-# NEVER commit raw captures
-captures/*.sigmf-data
-captures/*.sigmf-meta
+# ignore EVERYTHING in the captures folder
+captures/*
 
-# BUT allow the database
-!captures/*.db
+# …except the SQLite manifest
+!data/captures/*.db
+!data/captures/*.db-journal
+
+# Dataset directory (user's local storage, not tracked)
+# Can be synced to cloud storage if desired - see dataset/README.md
+dataset/
+!dataset/README.md
+!dataset/notebooks/.gitkeep
+
+# Documentation (personal/private)
+docs/
+
+# Cloud sync scripts (personal/private)
+scripts/sync/
+
+# Experimental sensing work (keep local)
+scripts/sensing/
+
+# Cloud sync configuration (personal settings, not tracked)
+scripts/sync/sync_config.sh
+
+# Local configuration (personal paths and settings, not tracked)
+scripts/utils/local_config.py
 
 # Database files
 *.kuzu/
@@ -70,8 +91,5 @@ logs/
 *.tmp
 *.temp
 
-# Package lock files
+# UV lock file
 uv.lock
-poetry.locku v . l o c k 
- 
- 
